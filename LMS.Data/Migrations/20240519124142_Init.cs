@@ -19,6 +19,13 @@ namespace LMS.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -26,32 +33,6 @@ namespace LMS.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetRoles", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUsers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -96,30 +77,50 @@ namespace LMS.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SystemRoles",
+                name: "AspNetUsers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(150)", nullable: false),
-                    FrameworkRoleId = table.Column<int>(type: "int", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(150)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(150)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 256, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    SupervisorId = table.Column<int>(type: "int", nullable: true),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedBy = table.Column<int>(type: "int", nullable: true),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedBy = table.Column<int>(type: "int", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SystemRoles", x => x.Id);
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SystemRoles_AspNetRoles_FrameworkRoleId",
-                        column: x => x.FrameworkRoleId,
+                        name: "FK_AspNetUsers_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
                         principalTable: "AspNetRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_AspNetUsers_SupervisorId",
+                        column: x => x.SupervisorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -208,49 +209,6 @@ namespace LMS.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SystemUsers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstName = table.Column<string>(type: "nvarchar(150)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(150)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(200)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(20)", nullable: true),
-                    FrameworkRoleId = table.Column<int>(type: "int", nullable: false),
-                    SupervisorId = table.Column<int>(type: "int", nullable: true),
-                    FrameworkUserId = table.Column<int>(type: "int", nullable: false),
-                    CreatedBy = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
-                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<int>(type: "int", nullable: true),
-                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SystemUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_SystemUsers_AspNetUsers_FrameworkUserId",
-                        column: x => x.FrameworkUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SystemUsers_SystemRoles_FrameworkRoleId",
-                        column: x => x.FrameworkRoleId,
-                        principalTable: "SystemRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SystemUsers_SystemUsers_SupervisorId",
-                        column: x => x.SupervisorId,
-                        principalTable: "SystemUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Leaves",
                 columns: table => new
                 {
@@ -277,46 +235,36 @@ namespace LMS.Data.Migrations
                 {
                     table.PrimaryKey("PK_Leaves", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Leaves_AspNetUsers_SupervisorId",
+                        column: x => x.SupervisorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Leaves_LeaveTypes_LeaveTypeId",
                         column: x => x.LeaveTypeId,
                         principalTable: "LeaveTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Leaves_SystemUsers_SupervisorId",
-                        column: x => x.SupervisorId,
-                        principalTable: "SystemUsers",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                columns: new[] { "Id", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "ModifiedBy", "ModifiedDate", "Name", "NormalizedName", "Status" },
                 values: new object[,]
                 {
-                    { 1, null, "Admin", "ADMIN" },
-                    { 3, null, "User", "USER" }
+                    { 1, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6696), null, null, null, null, "Admin", "ADMIN", 1 },
+                    { 3, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6707), null, null, null, null, "User", "USER", 1 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "initial", "superuser@lml.com", true, true, null, "superuser@lml.com", "superuser@lml.com", "AQAAAAEAACcQAAAAEO/OKTaYnFYnbrcZ/1oFdpX4j611YcimIIs+/PgcQbaQHX/LK9RtC1IpnPsZxMonJw==", null, false, "initial", false, "superuser@lml.com" });
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "ModifiedBy", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RoleId", "SecurityStamp", "Status", "SupervisorId", "TwoFactorEnabled", "UserName" },
+                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6870), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
 
             migrationBuilder.InsertData(
-                table: "SystemRoles",
-                columns: new[] { "Id", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "FrameworkRoleId", "ModifiedBy", "ModifiedDate", "Name", "Status" },
-                values: new object[,]
-                {
-                    { 2, 0, new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6063), null, null, 2, null, null, "Supervisor", 1 },
-                    { 1, 0, new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6052), null, null, 1, null, null, "Admin", 1 },
-                    { 3, 0, new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6064), null, null, 3, null, null, "User", 1 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "SystemUsers",
-                columns: new[] { "Id", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "FirstName", "FrameworkRoleId", "FrameworkUserId", "LastName", "ModifiedBy", "ModifiedDate", "Phone", "Status", "SupervisorId" },
-                values: new object[] { 1, 0, new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6135), null, null, "superadmin@lms.com", "Super", 1, 1, "Admin", null, null, null, 1, null });
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { 1, 1 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -351,6 +299,16 @@ namespace LMS.Data.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_RoleId",
+                table: "AspNetUsers",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_SupervisorId",
+                table: "AspNetUsers",
+                column: "SupervisorId");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -365,26 +323,6 @@ namespace LMS.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Leaves_SupervisorId",
                 table: "Leaves",
-                column: "SupervisorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SystemRoles_FrameworkRoleId",
-                table: "SystemRoles",
-                column: "FrameworkRoleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SystemUsers_FrameworkRoleId",
-                table: "SystemUsers",
-                column: "FrameworkRoleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SystemUsers_FrameworkUserId",
-                table: "SystemUsers",
-                column: "FrameworkUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SystemUsers_SupervisorId",
-                table: "SystemUsers",
                 column: "SupervisorId");
         }
 
@@ -410,16 +348,10 @@ namespace LMS.Data.Migrations
                 name: "Leaves");
 
             migrationBuilder.DropTable(
-                name: "LeaveTypes");
-
-            migrationBuilder.DropTable(
-                name: "SystemUsers");
-
-            migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "SystemRoles");
+                name: "LeaveTypes");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

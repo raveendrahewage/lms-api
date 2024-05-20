@@ -1,18 +1,17 @@
-﻿using LMS.Data.Common;
-using LMS.Data.Enum;
-using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LMS.Data.Enum;
 
-namespace LMS.Data.Models
+namespace LMS.Services.ViewModels
 {
-    public class SystemRole: IdentityRole<int>
+    public class DataRecordViewModel
     {
+        public int Id { get; set; }
         [Required]
         public int CreatedBy { get; set; }
         [Required]
@@ -22,6 +21,5 @@ namespace LMS.Data.Models
         public int? DeletedBy { get; set; }
         public DateTime? DeletedDate { get; set; }
         public DataRecordStatus Status { get; set; } = DataRecordStatus.Active;
-        public virtual List<SystemUser> SystemUsers { get; set; } = new List<SystemUser>();
     }
 }

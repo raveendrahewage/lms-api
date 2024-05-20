@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240518132202_Init")]
+    [Migration("20240519124142_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -24,136 +24,6 @@ namespace LMS.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("LMS.Data.CoreIdentity.CoreIdentityRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "User",
-                            NormalizedName = "USER"
-                        });
-                });
-
-            modelBuilder.Entity("LMS.Data.CoreIdentity.CoreIdentityUser", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "initial",
-                            Email = "superuser@lml.com",
-                            EmailConfirmed = true,
-                            LockoutEnabled = true,
-                            NormalizedEmail = "superuser@lml.com",
-                            NormalizedUserName = "superuser@lml.com",
-                            PasswordHash = "AQAAAAEAACcQAAAAEO/OKTaYnFYnbrcZ/1oFdpX4j611YcimIIs+/PgcQbaQHX/LK9RtC1IpnPsZxMonJw==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "initial",
-                            TwoFactorEnabled = false,
-                            UserName = "superuser@lml.com"
-                        });
-                });
 
             modelBuilder.Entity("LMS.Data.Models.LeaveType", b =>
                 {
@@ -267,6 +137,10 @@ namespace LMS.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
 
@@ -279,9 +153,6 @@ namespace LMS.Data.Migrations
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("FrameworkRoleId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
 
@@ -289,44 +160,44 @@ namespace LMS.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FrameworkRoleId");
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("SystemRoles");
+                    b.ToTable("AspNetRoles", (string)null);
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6052),
-                            FrameworkRoleId = 1,
+                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6696),
                             Name = "Admin",
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6063),
-                            FrameworkRoleId = 2,
-                            Name = "Supervisor",
+                            NormalizedName = "ADMIN",
                             Status = 1
                         },
                         new
                         {
                             Id = 3,
+                            ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6064),
-                            FrameworkRoleId = 3,
+                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6707),
                             Name = "User",
+                            NormalizedName = "USER",
                             Status = 1
                         });
                 });
@@ -338,6 +209,13 @@ namespace LMS.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
@@ -353,21 +231,25 @@ namespace LMS.Data.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasMaxLength(256)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("FrameworkRoleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FrameworkUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
@@ -375,8 +257,28 @@ namespace LMS.Data.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Phone")
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -384,28 +286,51 @@ namespace LMS.Data.Migrations
                     b.Property<int?>("SupervisorId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FrameworkRoleId");
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
 
-                    b.HasIndex("FrameworkUserId");
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("SupervisorId");
 
-                    b.ToTable("SystemUsers");
+                    b.ToTable("AspNetUsers", (string)null);
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 18, 18, 52, 2, 422, DateTimeKind.Local).AddTicks(6135),
+                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6870),
                             Email = "superadmin@lms.com",
+                            EmailConfirmed = true,
                             FirstName = "Super",
-                            FrameworkRoleId = 1,
-                            FrameworkUserId = 1,
                             LastName = "Admin",
-                            Status = 1
+                            LockoutEnabled = true,
+                            NormalizedEmail = "SUPERADMIN@LMS.COM",
+                            NormalizedUserName = "SUPERADMIN@LMS.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==",
+                            PhoneNumberConfirmed = false,
+                            RoleId = 1,
+                            SecurityStamp = "initial",
+                            Status = 1,
+                            TwoFactorEnabled = false,
+                            UserName = "superadmin@lms.com"
                         });
                 });
 
@@ -491,6 +416,13 @@ namespace LMS.Data.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
@@ -529,45 +461,26 @@ namespace LMS.Data.Migrations
                     b.Navigation("Supervisor");
                 });
 
-            modelBuilder.Entity("LMS.Data.Models.SystemRole", b =>
-                {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityRole", "FrameworkRole")
-                        .WithMany()
-                        .HasForeignKey("FrameworkRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FrameworkRole");
-                });
-
             modelBuilder.Entity("LMS.Data.Models.SystemUser", b =>
                 {
-                    b.HasOne("LMS.Data.Models.SystemRole", "FrameworkRole")
-                        .WithMany()
-                        .HasForeignKey("FrameworkRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityUser", "FrameworkUser")
-                        .WithMany()
-                        .HasForeignKey("FrameworkUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("LMS.Data.Models.SystemRole", "Role")
+                        .WithMany("SystemUsers")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("LMS.Data.Models.SystemUser", "Supervisor")
                         .WithMany("EmployeesUnderSupervision")
                         .HasForeignKey("SupervisorId");
 
-                    b.Navigation("FrameworkRole");
-
-                    b.Navigation("FrameworkUser");
+                    b.Navigation("Role");
 
                     b.Navigation("Supervisor");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityRole", null)
+                    b.HasOne("LMS.Data.Models.SystemRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -576,7 +489,7 @@ namespace LMS.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityUser", null)
+                    b.HasOne("LMS.Data.Models.SystemUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -585,7 +498,7 @@ namespace LMS.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityUser", null)
+                    b.HasOne("LMS.Data.Models.SystemUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -594,13 +507,13 @@ namespace LMS.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityRole", null)
+                    b.HasOne("LMS.Data.Models.SystemRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityUser", null)
+                    b.HasOne("LMS.Data.Models.SystemUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -609,11 +522,16 @@ namespace LMS.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("LMS.Data.CoreIdentity.CoreIdentityUser", null)
+                    b.HasOne("LMS.Data.Models.SystemUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("LMS.Data.Models.SystemRole", b =>
+                {
+                    b.Navigation("SystemUsers");
                 });
 
             modelBuilder.Entity("LMS.Data.Models.SystemUser", b =>

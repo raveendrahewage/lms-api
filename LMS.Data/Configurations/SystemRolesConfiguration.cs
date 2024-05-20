@@ -1,5 +1,4 @@
-﻿using LMS.Data.CoreIdentity;
-using LMS.Data.Enum;
+﻿using LMS.Data.Enum;
 using LMS.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,9 +11,8 @@ namespace ACIS.Data.Configurations
         {
             builder.HasData
             (
-                new SystemRole { Id = 1, Name = "Admin", FrameworkRoleId = 1 },
-                new SystemRole { Id = 2, Name = "Supervisor", FrameworkRoleId = 2 },
-                new SystemRole { Id = 3, Name = "User", FrameworkRoleId = 3 }
+                new SystemRole { Id = 1, Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "initial" },
+                new SystemRole { Id = 3, Name = "User", NormalizedName = "USER", ConcurrencyStamp = "initial" }
             );
         }
     }
