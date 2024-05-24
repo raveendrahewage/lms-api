@@ -22,45 +22,7 @@ namespace LMS.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("LMS.Data.Models.LeaveType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ModifiedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LeaveTypes");
-                });
-
-            modelBuilder.Entity("LMS.Data.Models.Leaves", b =>
+            modelBuilder.Entity("LMS.Data.Models.Leave", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,19 +73,56 @@ namespace LMS.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SupervisorId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("ToDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmployeeId");
+
                     b.HasIndex("LeaveTypeId");
 
-                    b.HasIndex("SupervisorId");
+                    b.HasIndex("ReviewedBy");
 
                     b.ToTable("Leaves");
+                });
+
+            modelBuilder.Entity("LMS.Data.Models.LeaveType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveTypes");
                 });
 
             modelBuilder.Entity("LMS.Data.Models.SystemRole", b =>
@@ -182,17 +181,17 @@ namespace LMS.Data.Migrations
                             Id = 1,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6696),
+                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5836),
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             Status = 1
                         },
                         new
                         {
-                            Id = 3,
+                            Id = 2,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6707),
+                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5850),
                             Name = "User",
                             NormalizedName = "USER",
                             Status = 1
@@ -227,9 +226,8 @@ namespace LMS.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
@@ -313,7 +311,7 @@ namespace LMS.Data.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6870),
+                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(6784),
                             Email = "superadmin@lms.com",
                             EmailConfirmed = true,
                             FirstName = "Super",
@@ -441,17 +439,26 @@ namespace LMS.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LMS.Data.Models.Leaves", b =>
+            modelBuilder.Entity("LMS.Data.Models.Leave", b =>
                 {
+                    b.HasOne("LMS.Data.Models.SystemUser", "Employee")
+                        .WithMany("Leaves")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("LMS.Data.Models.LeaveType", "LeaveType")
-                        .WithMany()
+                        .WithMany("Leaves")
                         .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("LMS.Data.Models.SystemUser", "Supervisor")
-                        .WithMany()
-                        .HasForeignKey("SupervisorId");
+                        .WithMany("ReviewedLeaves")
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Employee");
 
                     b.Navigation("LeaveType");
 
@@ -468,7 +475,8 @@ namespace LMS.Data.Migrations
 
                     b.HasOne("LMS.Data.Models.SystemUser", "Supervisor")
                         .WithMany("EmployeesUnderSupervision")
-                        .HasForeignKey("SupervisorId");
+                        .HasForeignKey("SupervisorId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Role");
 
@@ -526,6 +534,11 @@ namespace LMS.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LMS.Data.Models.LeaveType", b =>
+                {
+                    b.Navigation("Leaves");
+                });
+
             modelBuilder.Entity("LMS.Data.Models.SystemRole", b =>
                 {
                     b.Navigation("SystemUsers");
@@ -534,6 +547,10 @@ namespace LMS.Data.Migrations
             modelBuilder.Entity("LMS.Data.Models.SystemUser", b =>
                 {
                     b.Navigation("EmployeesUnderSupervision");
+
+                    b.Navigation("Leaves");
+
+                    b.Navigation("ReviewedLeaves");
                 });
 #pragma warning restore 612, 618
         }

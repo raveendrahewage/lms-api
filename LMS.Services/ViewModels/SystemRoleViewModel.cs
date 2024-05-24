@@ -12,5 +12,6 @@ namespace LMS.Services.ViewModels
     public class SystemRoleViewModel: DataRecordViewModel
     {
         public string Name { get; set; } = string.Empty;
+        public virtual List<SystemUserViewModel> SystemUsers { get; set; } = [];
     }
 }

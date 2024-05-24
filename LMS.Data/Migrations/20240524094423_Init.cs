@@ -84,7 +84,6 @@ namespace LMS.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FirstName = table.Column<string>(type: "nvarchar(150)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(150)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 256, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(20)", nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     SupervisorId = table.Column<int>(type: "int", nullable: true),
@@ -97,6 +96,7 @@ namespace LMS.Data.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -222,7 +222,6 @@ namespace LMS.Data.Migrations
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     DeniedReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReviewedBy = table.Column<int>(type: "int", nullable: true),
-                    SupervisorId = table.Column<int>(type: "int", nullable: true),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedBy = table.Column<int>(type: "int", nullable: true),
@@ -235,8 +234,13 @@ namespace LMS.Data.Migrations
                 {
                     table.PrimaryKey("PK_Leaves", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Leaves_AspNetUsers_SupervisorId",
-                        column: x => x.SupervisorId,
+                        name: "FK_Leaves_AspNetUsers_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Leaves_AspNetUsers_ReviewedBy",
+                        column: x => x.ReviewedBy,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
@@ -252,14 +256,14 @@ namespace LMS.Data.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "ModifiedBy", "ModifiedDate", "Name", "NormalizedName", "Status" },
                 values: new object[,]
                 {
-                    { 1, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6696), null, null, null, null, "Admin", "ADMIN", 1 },
-                    { 3, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6707), null, null, null, null, "User", "USER", 1 }
+                    { 1, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5836), null, null, null, null, "Admin", "ADMIN", 1 },
+                    { 2, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5850), null, null, null, null, "User", "USER", 1 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "ModifiedBy", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RoleId", "SecurityStamp", "Status", "SupervisorId", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 5, 19, 18, 11, 42, 46, DateTimeKind.Local).AddTicks(6870), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
+                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(6784), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -316,14 +320,19 @@ namespace LMS.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Leaves_EmployeeId",
+                table: "Leaves",
+                column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leaves_LeaveTypeId",
                 table: "Leaves",
                 column: "LeaveTypeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Leaves_SupervisorId",
+                name: "IX_Leaves_ReviewedBy",
                 table: "Leaves",
-                column: "SupervisorId");
+                column: "ReviewedBy");
         }
 
         /// <inheritdoc />

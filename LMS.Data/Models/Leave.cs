@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 
 namespace LMS.Data.Models
 {
-    public class Leaves: DataRecord
+    public class Leave: DataRecord
     {
+        [ForeignKey(nameof(Employee))]
         public int EmployeeId { get; set; }
         [ForeignKey(nameof(LeaveType))]
         public int LeaveTypeId { get; set; }
@@ -21,10 +22,11 @@ namespace LMS.Data.Models
         public bool IsApproved { get; set; }
         [Column(TypeName = "nvarchar(max)")]
         public string? DeniedReason { get; set; }
-        [ForeignKey(nameof(SystemUser))]
+        [ForeignKey(nameof(Supervisor))]
         public int? ReviewedBy { get; set; }
 
-        public virtual required LeaveType LeaveType { get; set; }
+        public virtual LeaveType LeaveType { get; set; }
         public virtual SystemUser? Supervisor { get; set; }
+        public virtual SystemUser Employee { get; set; }
     }
 }

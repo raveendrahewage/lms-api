@@ -27,6 +27,8 @@ namespace LMS.Services.Mappings
                 .ForMember(d => d.Email, opt => opt.MapFrom(s => s.Email))
                 .ForMember(d => d.NormalizedEmail, opt => opt.MapFrom(s => s.Email))
                 .ForMember(d => d.NormalizedUserName, opt => opt.MapFrom(s => s.Email));
+            CreateMap<LeaveType, LeaveTypeViewModel>().ReverseMap();
+            CreateMap<Leave, LeaveViewModel>().ReverseMap();
         }
     }
 }

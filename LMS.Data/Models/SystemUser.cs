@@ -19,9 +19,6 @@ namespace LMS.Data.Models
         [Required]
         [Column(TypeName = "nvarchar(150)")]
         public string LastName { get; set; } = string.Empty;
-        [Required]
-        [Column(TypeName = "nvarchar(200)")]
-        public string Email { get; set; } = string.Empty;
         [Column(TypeName = "nvarchar(20)")]
         public string? PhoneNumber { get; set; }
         [ForeignKey(nameof(Role))]
@@ -38,7 +35,11 @@ namespace LMS.Data.Models
         public DateTime? DeletedDate { get; set; }
         public DataRecordStatus Status { get; set; } = DataRecordStatus.Active;
         public virtual SystemUser? Supervisor { get; set; }
-        public virtual List<SystemUser> EmployeesUnderSupervision { get; set; } = new List<SystemUser>();
+        public virtual List<SystemUser> EmployeesUnderSupervision { get; set; } = [];
         public virtual SystemRole Role { get; set; }
+        public virtual List<Leave> Leaves { get; set; } = [];
+        public virtual List<Leave> ReviewedLeaves { get; set; } = [];
+
+        public string FullName => $"{FirstName} {LastName}";
     }
 }

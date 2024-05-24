@@ -22,6 +22,6 @@ namespace LMS.Data.Models
         public int? DeletedBy { get; set; }
         public DateTime? DeletedDate { get; set; }
         public DataRecordStatus Status { get; set; } = DataRecordStatus.Active;
-        public virtual List<SystemUser> SystemUsers { get; set; } = new List<SystemUser>();
+        public virtual List<SystemUser> SystemUsers { get; set; } = [];
     }
 }

@@ -20,72 +20,50 @@ namespace LMS.Api.Controllers
         public AccountController(IAccountService accountService) {
             _accountService = accountService;
         }
-        // GET: api/<AccountController>
-        [HttpGet]
-        [Route("")]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
 
-        // GET api/<AccountController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<AccountController>
         [HttpPost]
         [Route("sign-in")]
-        public async Task<IActionResult> SignIn([FromBody] SignInViewModel model)
+        public async Task<IActionResult> SignIn(SignInViewModel model)
         {
             if (ModelState.IsValid) { 
                 var result = await _accountService.SignIn(model);
-                if (result.Success) {
-                    SetTokenCookieAndHeader(result.Data.Token);
-                    return Ok(result);
-                } else return Unauthorized(result);
+                return result.Success ? Ok(result) : Unauthorized(result);
             }
             return BadRequest(model);
         }
 
         [HttpPost]
         [Route("sign-up")]
-        public async Task<IActionResult> SignUp([FromBody] SignUpViewModel model)
+        public async Task<IActionResult> SignUp(SignUpViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var result = await _accountService.SignUp(model);
-                return result.Success ? Ok(result) : BadRequest(result);
+                return Ok(await _accountService.SignUp(model));
             }
             return BadRequest(model);
         }
 
-        // PUT api/<AccountController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpGet]
+        [Route("get-logged-in-system-user")]
+        public async Task<IActionResult> GetLoggedInSystemUser()
         {
+            return Ok(await _accountService.GetLoggedInSystemUser());
         }
-
-        // DELETE api/<AccountController>/5
-        [HttpDelete("{id}")]
-        [Authorize]
-        public void Delete(int id)
+        [HttpPost]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
-            var currentUserId = User.FindFirstValue(AuthClaims.SysUserUserId);
-        }
-        private void SetTokenCookieAndHeader(string token)
-        {
-            var cookieOptions = new CookieOptions
+            if (ModelState.IsValid)
             {
-                HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
-            };
-            Response.Headers.Append("Authorization", $"Bearer {token}");
-            Response.Headers.Append("Content-Type", "application/json");
-            Response.Cookies.Append("token", token, cookieOptions);
+                return Ok(await _accountService.ResetPassword(model));
+            }
+            return BadRequest(model);
+        }
+        [HttpGet]
+        [Route("get-password-reset-token")]
+        public async Task<IActionResult> GetPasswordResetToken()
+        {
+            return Ok(await _accountService.GetPasswordResetToken());
         }
     }
 }

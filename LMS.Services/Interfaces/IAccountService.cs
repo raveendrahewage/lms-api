@@ -11,7 +11,12 @@ namespace LMS.Services.Interfaces
 {
     public interface IAccountService
     {
-        public Task<ApiResponse<AuthResponse>> SignIn(SignInViewModel model);
-        public Task<ApiResponse<AuthResponse>> SignUp(SignUpViewModel model);
+        public Task<ApiResponse<AuthResult>> SignIn(SignInViewModel model);
+        public Task<ApiResponse<AuthResult>> SignUp(SignUpViewModel model);
+        public Task<ApiResponse<bool>> ResetPassword(ResetPasswordViewModel model);
+        public Task<ApiResponse<string>> GetPasswordResetToken();
+        public Task<ApiResponse<SystemUserViewModel>> GetLoggedInSystemUser();
+        public string GetCurrentLoggedInUsername();
+        public int GetCurrentLoggedInUserId();
     }
 }

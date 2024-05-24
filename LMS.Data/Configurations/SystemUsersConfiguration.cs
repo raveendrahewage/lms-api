@@ -2,6 +2,7 @@
 using LMS.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace ACIS.Data.Configurations
 {
@@ -29,10 +30,23 @@ namespace ACIS.Data.Configurations
                     PasswordHash = "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw=="
                 }
             );
+            builder.HasMany(u => u.EmployeesUnderSupervision)
+                .WithOne(u => u.Supervisor)
+                .HasForeignKey(u => u.SupervisorId)
+                .OnDelete(DeleteBehavior.NoAction);
             builder.HasOne(u => u.Role)
                 .WithMany(r => r.SystemUsers)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.HasMany(u => u.Leaves)
+                .WithOne(r => r.Employee)
+                .HasForeignKey(u => u.EmployeeId)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.HasMany(u => u.ReviewedLeaves)
+                .WithOne(r => r.Supervisor)
+                .HasForeignKey(u => u.ReviewedBy)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);
         }
     }
 }

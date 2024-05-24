@@ -20,5 +20,7 @@ namespace LMS.Services.ViewModels
         public virtual SystemUserViewModel? Supervisor { get; set; }
         public virtual List<SystemUserViewModel> EmployeesUnderSupervision { get; set; } = new List<SystemUserViewModel>();
         public virtual SystemRoleViewModel Role { get; set; }
+        public virtual List<LeaveViewModel> Leaves { get; set; } = [];
+        public virtual List<LeaveViewModel> ReviewedLeaves { get; set; } = [];
     }
 }

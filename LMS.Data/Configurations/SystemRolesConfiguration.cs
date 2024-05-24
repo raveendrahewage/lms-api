@@ -12,8 +12,13 @@ namespace ACIS.Data.Configurations
             builder.HasData
             (
                 new SystemRole { Id = 1, Name = "Admin", NormalizedName = "ADMIN", ConcurrencyStamp = "initial" },
-                new SystemRole { Id = 3, Name = "User", NormalizedName = "USER", ConcurrencyStamp = "initial" }
+                new SystemRole { Id = 2, Name = "User", NormalizedName = "USER", ConcurrencyStamp = "initial" }
             );
+            builder.HasMany(u => u.SystemUsers)
+                .WithOne(r => r.Role)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);
         }
     }
 }

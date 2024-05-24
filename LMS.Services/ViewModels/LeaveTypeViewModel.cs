@@ -1,4 +1,5 @@
 ﻿using LMS.Data.Common;
+using LMS.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,12 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LMS.Data.Models
+namespace LMS.Services.ViewModels
 {
-    public class LeaveType : DataRecord
+    public class LeaveTypeViewModel : DataRecordViewModel
     {
-        [Column(TypeName = "nvarchar(150)")]
         public string Name { get; set; } = string.Empty;
-        public virtual List<Leave> Leaves { get; } = [];
+        public virtual List<LeaveViewModel> Leaves { get; } = [];
     }
 }

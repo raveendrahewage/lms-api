@@ -12,6 +12,14 @@ namespace LMS.Services.Responses
     {
         public ApiResponse(
             bool success,
+            T? data
+        )
+        {
+            this.Success = success;
+            this.Data = data;
+        }
+        public ApiResponse(
+            bool success,
             string message
         )
         {

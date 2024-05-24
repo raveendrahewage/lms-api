@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace LMS.Services.Responses
 {
-    public class AuthResponse
+    public class AuthResult
     {
-        public AuthResponse(string? token, DateTime? expiresIn, SystemUserViewModel? user)
+        public AuthResult(string? token, DateTime? expiresIn, SystemUserViewModel? user)
         {
             this.Token = token;
             this.ExpiresOn = expiresIn;

@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Azure;
 using LMS.Api.ViewModels;
+using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
+using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
@@ -23,132 +25,224 @@ namespace LMS.Services
 {
     public class AccountService: IAccountService
     {
-        private readonly DbContext _context;
+        private readonly ApplicationDbContext _appDbContext;
         private readonly RoleManager<SystemRole> _roleManager;
         private readonly SignInManager<SystemUser> _signInManager;
         private readonly UserManager<SystemUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly IApiResponseHelper _apiResponseHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AccountService(
-            DbContext context,
+            ApplicationDbContext appDbContext,
             RoleManager<SystemRole> roleManager,
             SignInManager<SystemUser> signInManager,
             UserManager<SystemUser> userManager,
             IConfiguration configuration,
             IMapper mapper,
+            IApiResponseHelper apiResponseHelper,
             IHttpContextAccessor httpContextAccessor
         )
         {
-            _context = context;
+            _appDbContext = appDbContext;
             _roleManager = roleManager;
             _signInManager = signInManager;
             _userManager = userManager;
             _configuration = configuration;
             _mapper = mapper;
+            _apiResponseHelper = apiResponseHelper;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ApiResponse<AuthResponse>> SignIn(SignInViewModel model)
+        public async Task<ApiResponse<AuthResult>> SignIn(SignInViewModel model)
         {
-            var signInResult = await SignInAsync(model, false);
-            if (signInResult)
+            try
             {
-                var systemUser = await _userManager.FindByEmailAsync(model.Email);
-                var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                var token = GenerateToken(systemUser);
-                return new ApiResponse<AuthResponse>(
-                    signInResult,
-                    "Signed in successfully!",
-                    new AuthResponse(
-                        new JwtSecurityTokenHandler().WriteToken(token),
-                        token.ValidTo,
-                        systemUserViewModel
-                    )
-                );
+                var signInResult = await SignInAsync(model, false);
+                if (signInResult)
+                {
+                    var sysUser = await _userManager.FindByEmailAsync(model.Email);
+                    if(sysUser is not null)
+                    {
+                        var systemUser = await _appDbContext.SystemUsers
+                            .Include(x => x.Role)
+                            .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
+                        var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
+                        var token = GenerateToken(systemUser);
+                        return _apiResponseHelper.GenerateApiResponse<AuthResult>(
+                            signInResult,
+                            "Signed in successfully!",
+                            new AuthResult(
+                                new JwtSecurityTokenHandler().WriteToken(token),
+                                token.ValidTo,
+                                systemUserViewModel
+                            )
+                        );
+                    }
+                }
+                return new ApiResponse<AuthResult>(signInResult, "Signed in failed! Incorrect username or password.");
+            } catch(Exception ex)
+            {
+                return _apiResponseHelper.GenerateApiResponse<AuthResult>(false, ex.Message);
             }
-            return new ApiResponse<AuthResponse>(signInResult, "Signed in failed! Incorrect username or password.");
         }
 
-        public async Task<ApiResponse<AuthResponse>> SignUp(SignUpViewModel model)
+        public async Task<ApiResponse<AuthResult>> SignUp(SignUpViewModel model)
         {
-            var signUpResult = await SignUpAsync(model);
-            if (signUpResult)
+            try
             {
-                var systemUser = await _userManager.FindByEmailAsync(model.Email);
-                var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                var token = GenerateToken(systemUser);
-                return new ApiResponse<AuthResponse>(
-                    signUpResult,
-                    "Signed up successfully!",
-                    new AuthResponse (
-                        new JwtSecurityTokenHandler().WriteToken(token),
-                        token.ValidTo,
-                        systemUserViewModel
-                    )
-                );
+                var signUpResult = await SignUpAsync(model);
+                if (signUpResult)
+                {
+                    var sysUser = await _userManager.FindByEmailAsync(model.Email);
+                    if (sysUser is not null)
+                    {
+                        var systemUser = await _appDbContext.SystemUsers
+                            .Include(x => x.Role)
+                            .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
+                        var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
+                        var token = GenerateToken(systemUser);
+                        return _apiResponseHelper.GenerateApiResponse<AuthResult>(
+                            signUpResult,
+                            "Signed up successfully!",
+                            new AuthResult(
+                                new JwtSecurityTokenHandler().WriteToken(token),
+                                token.ValidTo,
+                                systemUserViewModel
+                            )
+                        );
+                    }
+                }
+                return _apiResponseHelper.GenerateApiResponse<AuthResult>(signUpResult, "Signed up failed! Incorrect username or password.");
             }
-            return new ApiResponse<AuthResponse>(signUpResult, "Signed up failed! Something went wrong.");
+            catch(Exception ex)
+            {
+                return _apiResponseHelper.GenerateApiResponse<AuthResult>(false, ex.Message);
+            }
+        }
+        public async Task<ApiResponse<bool>> ResetPassword(ResetPasswordViewModel model)
+        {
+            try
+            {
+                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
+                if(loggedInSystemUser is not null)
+                {
+                    var passwordCheckResult = await _userManager.CheckPasswordAsync(loggedInSystemUser, model.OldPassword);
+                    if (passwordCheckResult)
+                    {
+                        var result = await _userManager.ResetPasswordAsync(loggedInSystemUser, model.Token, model.NewPassword);
+                        if(result is not null && result.Succeeded)
+                            return _apiResponseHelper.GenerateApiResponse<bool>(result.Succeeded, "Password reset successfully!", result.Succeeded);
+                        return _apiResponseHelper.GenerateApiResponse<bool>(false, "Password reset failed! Something went wrong.");
+                    }
+                    return _apiResponseHelper.GenerateApiResponse<bool>(false, "Incorrect password!");
+                }
+                return _apiResponseHelper.GenerateApiResponse<bool>(false, "System user not found!");
+            }
+            catch (Exception ex)
+            {
+                return _apiResponseHelper.GenerateApiResponse<bool>(false, ex.Message);
+            }
+        }
+        public async Task<ApiResponse<string>> GetPasswordResetToken()
+        {
+            try
+            {
+                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
+                if (loggedInSystemUser is not null)
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser);
+                    return _apiResponseHelper.GenerateApiResponse<string>(true, token);
+                }
+                return _apiResponseHelper.GenerateApiResponse<string>(false, "System user not found!");
+            }
+            catch (Exception ex)
+            {
+                return _apiResponseHelper.GenerateApiResponse<string>(false, ex.Message);
+            }
+        }
+        public async Task<ApiResponse<SystemUserViewModel>> GetLoggedInSystemUser()
+        {
+            try
+            {
+                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
+                if (loggedInSystemUser is not null)
+                {
+                    var systemUser = _appDbContext.SystemUsers
+                        .Include(x => x.Role)
+                        .Include(x => x.Leaves)
+                        .Include(x => x.ReviewedLeaves)
+                        .FirstOrDefaultAsync(x => x.Id == loggedInSystemUser.Id);
+                    var systemUserViewModel = _mapper.Map<SystemUserViewModel>(loggedInSystemUser);
+                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, systemUserViewModel);
+                }
+                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "System user not found!");
+            }
+            catch (Exception ex)
+            {
+                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+            }
         }
         public async Task<bool> SignInAsync(SignInViewModel model, bool lockoutOnFailure = false)
         {
-            var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure);
-            if (signInResult != null && signInResult.Succeeded) return true;
-
-            return false;
+            try
+            {
+                var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure);
+                if (signInResult != null && signInResult.Succeeded) return true;
+                return false;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
         }
 
         public async Task<bool> SignUpAsync(SignUpViewModel model)
         {
-            var newSystemUser = _mapper.Map<SignUpViewModel, SystemUser>(model);
-            newSystemUser.SupervisorId = model.SupervisorId is not null && model.SupervisorId > 0 ? model.SupervisorId : null;
-            var signUpResult = await _userManager.CreateAsync(newSystemUser, model.Password);
-            if (signUpResult != null && signUpResult.Succeeded) return true;
-            return false;
+            try
+            {
+                var newSystemUser = _mapper.Map<SignUpViewModel, SystemUser>(model);
+                newSystemUser.SupervisorId = model.SupervisorId is not null && model.SupervisorId > 0 ? model.SupervisorId : null;
+                var signUpResult = await _userManager.CreateAsync(newSystemUser, model.Password);
+                if (signUpResult != null && signUpResult.Succeeded) return true;
+                return false;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
         }
-        //private JwtSecurityToken GenerateJwtSecurityToken(SystemUser systemUser)
-        //{
-        //    var claims = new List<Claim>();
-
-        //    claims.Add(new Claim(AuthClaims.SysUserUsername, systemUser.Email));
-        //    claims.Add(new Claim(AuthClaims.SysUserUserId, systemUser.Id.ToString()));
-        //    claims.Add(new Claim(AuthClaims.SysUserRole, systemUser.Role.FrameworkRole.Name));
-        //    claims.Add(new Claim(AuthClaims.SysUserRoleId, systemUser.Role.FrameworkRole.Id.ToString()));
-
-        //    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfigurations.Key));
-        //    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        //    var token = new JwtSecurityToken(
-        //        _jwtConfigurations.Issuer,
-        //        _jwtConfigurations.Audience,
-        //        claims,
-        //        expires: DateTime.UtcNow.AddMinutes(_jwtConfigurations.Expires),
-        //        signingCredentials: credentials);
-        //    return token;
-        //}
         private SecurityToken GenerateToken(SystemUser systemUser)
         {
-            var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JWTSetting").GetSection("SecurityKey").Value!);
-            List<Claim> claims =
-            [
-                new Claim(AuthClaims.SysUserUsername, systemUser.Email),
+            try
+            {
+                var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JWTSetting").GetSection("SecurityKey").Value!);
+                List<Claim> claims =
+                [
+                    new Claim(AuthClaims.SysUserUsername, systemUser.Email),
                 new Claim(AuthClaims.SysUserUserId, systemUser.Id.ToString()),
                 new Claim(AuthClaims.SysUserRole, systemUser.Role.Name),
                 new Claim(AuthClaims.SysUserRoleId, systemUser.Role.Id.ToString()),
                 new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
                 new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
-            ];
+                ];
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration.GetSection("JWTSetting").GetSection("ExpireInMinutes").Value!)),
+                    SigningCredentials = new SigningCredentials(
+                        new SymmetricSecurityKey(key),
+                        SecurityAlgorithms.HmacSha256
+                    )
+                };
+                return new JwtSecurityTokenHandler().CreateToken(tokenDescriptor);
+            }
+            catch (Exception ex)
             {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration.GetSection("JWTSetting").GetSection("ExpireInMinutes").Value!)),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256
-                )
-            };
-            return new JwtSecurityTokenHandler().CreateToken(tokenDescriptor);
+                throw new Exception(ex.Message, ex);
+            }
         }
         public string GetCurrentLoggedInUsername()
         {

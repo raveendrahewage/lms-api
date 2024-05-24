@@ -2,6 +2,8 @@ using AutoMapper;
 using LMS.Data;
 using LMS.Data.Models;
 using LMS.Services;
+using LMS.Services.Helpers;
+using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -68,8 +70,11 @@ builder.Services.AddControllersWithViews()
 
 var mappingConfiguration = new MapperConfiguration(mc => { mc.AddProfile(new AutoMapperProfile()); });
 builder.Services.AddSingleton(mappingConfiguration.CreateMapper());
+builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
 
 
 builder.Services.AddControllers();
