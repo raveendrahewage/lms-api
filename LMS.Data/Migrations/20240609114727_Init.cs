@@ -36,6 +36,29 @@ namespace LMS.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Events",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Events", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LeaveTypes",
                 columns: table => new
                 {
@@ -247,8 +270,7 @@ namespace LMS.Data.Migrations
                         name: "FK_Leaves_LeaveTypes_LeaveTypeId",
                         column: x => x.LeaveTypeId,
                         principalTable: "LeaveTypes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
@@ -256,14 +278,14 @@ namespace LMS.Data.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "ModifiedBy", "ModifiedDate", "Name", "NormalizedName", "Status" },
                 values: new object[,]
                 {
-                    { 1, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5836), null, null, null, null, "Admin", "ADMIN", 1 },
-                    { 2, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5850), null, null, null, null, "User", "USER", 1 }
+                    { 1, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7777), null, null, null, null, "Admin", "ADMIN", 1 },
+                    { 2, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7787), null, null, null, null, "User", "USER", 1 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "ModifiedBy", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RoleId", "SecurityStamp", "Status", "SupervisorId", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(6784), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
+                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(8700), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -352,6 +374,9 @@ namespace LMS.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Events");
 
             migrationBuilder.DropTable(
                 name: "Leaves");

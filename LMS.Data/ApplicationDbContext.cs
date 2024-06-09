@@ -22,12 +22,16 @@ namespace LMS.Data
         public DbSet<SystemUser> SystemUsers { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<Event> Events { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfiguration<SystemRole>(new SystemRolesConfiguration());
             modelBuilder.ApplyConfiguration<SystemUser>(new SystemUsersConfiguration());
             modelBuilder.ApplyConfiguration<IdentityUserRole<int>>(new SystemUserRolesConfiguration());
+            modelBuilder.ApplyConfiguration<Leave>(new LeavesConfiguration());
+            modelBuilder.ApplyConfiguration<LeaveType>(new LeaveTypesConfiguration());
+            modelBuilder.ApplyConfiguration<Event>(new EventsConfiguration());
         }
     }
 }

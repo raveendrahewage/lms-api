@@ -10,6 +10,7 @@ namespace LMS.Data.Enum
     {
         Active = 1,
         Inactive = 2,
-        Deleted = 3
+        Deleted = 3,
+        Canceled = 4
     }
 }

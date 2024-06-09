@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240524094423_Init")]
+    [Migration("20240609114727_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -24,6 +24,54 @@ namespace LMS.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("LMS.Data.Models.Event", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Events");
+                });
 
             modelBuilder.Entity("LMS.Data.Models.Leave", b =>
                 {
@@ -184,7 +232,7 @@ namespace LMS.Data.Migrations
                             Id = 1,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5836),
+                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7777),
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             Status = 1
@@ -194,7 +242,7 @@ namespace LMS.Data.Migrations
                             Id = 2,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(5850),
+                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7787),
                             Name = "User",
                             NormalizedName = "USER",
                             Status = 1
@@ -314,7 +362,7 @@ namespace LMS.Data.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 5, 24, 15, 14, 23, 180, DateTimeKind.Local).AddTicks(6784),
+                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(8700),
                             Email = "superadmin@lms.com",
                             EmailConfirmed = true,
                             FirstName = "Super",
@@ -453,7 +501,7 @@ namespace LMS.Data.Migrations
                     b.HasOne("LMS.Data.Models.LeaveType", "LeaveType")
                         .WithMany("Leaves")
                         .HasForeignKey("LeaveTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("LMS.Data.Models.SystemUser", "Supervisor")

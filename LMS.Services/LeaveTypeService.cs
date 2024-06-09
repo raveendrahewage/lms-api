@@ -14,39 +14,25 @@ using LMS.Services.ViewModels;
 using LMS.Services.Responses;
 using Microsoft.EntityFrameworkCore;
 using LMS.Data.Enum;
+using LMS.Services.Interfaces;
 
 namespace LMS.Services
 {
-    public class LeaveTypeService
+    public class LeaveTypeService: ILeaveTypeService
     {
         private readonly ApplicationDbContext _appDbContext;
-        private readonly RoleManager<SystemRole> _roleManager;
-        private readonly SignInManager<SystemUser> _signInManager;
-        private readonly UserManager<SystemUser> _userManager;
-        private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IApiResponseHelper _apiResponseHelper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public LeaveTypeService(
             ApplicationDbContext appDbContext,
-            RoleManager<SystemRole> roleManager,
-            SignInManager<SystemUser> signInManager,
-            UserManager<SystemUser> userManager,
-            IConfiguration configuration,
             IMapper mapper,
-            IApiResponseHelper apiResponseHelper,
-            IHttpContextAccessor httpContextAccessor
+            IApiResponseHelper apiResponseHelper
         )
         {
             _appDbContext = appDbContext;
-            _roleManager = roleManager;
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _configuration = configuration;
             _mapper = mapper;
             _apiResponseHelper = apiResponseHelper;
-            _httpContextAccessor = httpContextAccessor;
         }
         
         public async Task<ApiResponse<LeaveTypeViewModel>> CreateLeaveType(LeaveTypeViewModel model)
@@ -66,9 +52,14 @@ namespace LMS.Services
         {
             try
             {
-                var leaveTypeToBeUpdated = _mapper.Map<LeaveType>(model);
-                var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
-                await _appDbContext.SaveChangesAsync();
+                var leaveTypeToBeUpdated = await _appDbContext.LeaveTypes
+                    .FirstOrDefaultAsync(x => x.Id == model.Id);
+                if(leaveTypeToBeUpdated is not null)
+                {
+                    var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
+                    await _appDbContext.SaveChangesAsync();
+                    return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type updated successfully!", model);
+                }
                 return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type updated successfully!", model);
             }
             catch (Exception ex)
@@ -118,7 +109,7 @@ namespace LMS.Services
                     _appDbContext.SaveChanges();
                     return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, leaveTypeViewModel);
                 }
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type not found!");
+                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, "Leave type not found!");
             }
             catch (Exception ex)
             {

@@ -75,6 +75,7 @@ builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 
 builder.Services.AddControllers();

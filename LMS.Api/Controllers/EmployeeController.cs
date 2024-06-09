@@ -29,9 +29,9 @@ namespace LMS.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetAllEmployeeById(int id)
+        public async Task<IActionResult> GetEmployeeById(int id)
         {
-            return Ok(await _employeeService.GetAllEmployeeById(id));
+            return Ok(await _employeeService.GetEmployeeById(id));
         }
 
         [HttpGet]

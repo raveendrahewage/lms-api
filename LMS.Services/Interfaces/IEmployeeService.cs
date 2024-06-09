@@ -6,7 +6,7 @@ namespace LMS.Services.Interfaces
     public interface IEmployeeService
     {
         Task<ApiResponse<SystemUserViewModel>> CreateNewEmployee(SignUpViewModel model);
-        Task<ApiResponse<SystemUserViewModel>> GetAllEmployeeById(int id);
+        Task<ApiResponse<SystemUserViewModel>> GetEmployeeById(int id);
         Task<ApiResponse<List<SystemUserViewModel>>> GetAllEmployees(int page, int size);
         Task<ApiResponse<SystemUserViewModel>> GetEmployeeByFullName(string fullName);
         Task<ApiResponse<List<SystemUserViewModel>>> GetEmployeesUnderSupervision(int id);
