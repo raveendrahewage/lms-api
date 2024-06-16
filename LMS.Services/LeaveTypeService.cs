@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using LMS.Data.Models;
 using LMS.Data;
-using LMS.Services.Helpers.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -22,33 +21,30 @@ namespace LMS.Services
     {
         private readonly ApplicationDbContext _appDbContext;
         private readonly IMapper _mapper;
-        private readonly IApiResponseHelper _apiResponseHelper;
 
         public LeaveTypeService(
             ApplicationDbContext appDbContext,
-            IMapper mapper,
-            IApiResponseHelper apiResponseHelper
+            IMapper mapper
         )
         {
             _appDbContext = appDbContext;
-            _mapper = mapper;
-            _apiResponseHelper = apiResponseHelper;
+            _mapper = mapper;;
         }
         
-        public async Task<ApiResponse<LeaveTypeViewModel>> CreateLeaveType(LeaveTypeViewModel model)
+        public async Task<LeaveTypeViewModel> CreateLeaveType(LeaveTypeViewModel model)
         {
             try
             {
                 var leaveTypeToBeCreated = _mapper.Map<LeaveType>(model);
                 var result = await _appDbContext.LeaveTypes.AddAsync(leaveTypeToBeCreated);
                 _appDbContext.SaveChanges();
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type created successfully!",model);
+                return model;
             } catch ( Exception ex )
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<LeaveTypeViewModel>> UpdateLeaveType(LeaveTypeViewModel model)
+        public async Task<LeaveTypeViewModel> UpdateLeaveType(LeaveTypeViewModel model)
         {
             try
             {
@@ -56,48 +52,45 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
                 if(leaveTypeToBeUpdated is not null)
                 {
-                    var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
+                    _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
-                    return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type updated successfully!", model);
+                    return _mapper.Map<LeaveTypeViewModel>(leaveTypeToBeUpdated);
                 }
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type updated successfully!", model);
+                throw new Exception("Leave type not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<List<LeaveTypeViewModel>>> GetAllLeaveTypes()
+        public async Task<List<LeaveTypeViewModel>> GetAllLeaveTypes()
         {
             try
             {
                 var leaveTypes = await _appDbContext.LeaveTypes
                     .ToListAsync();
-                var leaveTypesViewModel = _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveTypeViewModel>>(true, leaveTypesViewModel);
+                return _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveTypeViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<List<LeaveTypeViewModel>>> GetLeavesTypeByName(string typeName)
+        public async Task<List<LeaveTypeViewModel>> GetLeavesTypeByName(string typeName)
         {
             try
             {
                 var leaveTypes = await _appDbContext.LeaveTypes
                     .Where(x => x.Name.Equals(typeName))
                     .ToListAsync();
-                var leaveTypesViewModel = _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
-                _appDbContext.SaveChanges();
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveTypeViewModel>>(true, leaveTypesViewModel);
+                return _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveTypeViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<LeaveTypeViewModel>> GetLeaveTypeById(int id)
+        public async Task<LeaveTypeViewModel> GetLeaveTypeById(int id)
         {
             try
             {
@@ -105,18 +98,16 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(leaveType is not null)
                 {
-                    var leaveTypeViewModel = _mapper.Map<LeaveTypeViewModel>(leaveType);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, leaveTypeViewModel);
+                    return _mapper.Map<LeaveTypeViewModel>(leaveType);
                 }
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, "Leave type not found!");
+                throw new Exception("Leave type not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<LeaveTypeViewModel>> DeleteLeaveTypeById(int id)
+        public async Task<LeaveTypeViewModel> DeleteLeaveTypeById(int id)
         {
             try
             {
@@ -125,15 +116,15 @@ namespace LMS.Services
                 if(leaveType is not null)
                 {
                     leaveType.Status = DataRecordStatus.Deleted;
-                    var leaveTypeViewModel = _mapper.Map<LeaveTypeViewModel>(leaveType);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type deleted successfully!",leaveTypeViewModel);
+                    _appDbContext.LeaveTypes.Update(leaveType);
+                    await _appDbContext.SaveChangesAsync();
+                    return _mapper.Map<LeaveTypeViewModel>(leaveType);
                 }
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, "Leave type not found!");
+                throw new Exception("Leave type not found!");
             }
             catch (Exception ex)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, ex.Message);
+                throw;
             }
         }
     }

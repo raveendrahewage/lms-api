@@ -4,7 +4,6 @@ using LMS.Api.ViewModels;
 using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
@@ -31,7 +30,6 @@ namespace LMS.Services
         private readonly UserManager<SystemUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
-        private readonly IApiResponseHelper _apiResponseHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AccountService(
@@ -41,7 +39,6 @@ namespace LMS.Services
             UserManager<SystemUser> userManager,
             IConfiguration configuration,
             IMapper mapper,
-            IApiResponseHelper apiResponseHelper,
             IHttpContextAccessor httpContextAccessor
         )
         {
@@ -51,11 +48,10 @@ namespace LMS.Services
             _userManager = userManager;
             _configuration = configuration;
             _mapper = mapper;
-            _apiResponseHelper = apiResponseHelper;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ApiResponse<AuthResult>> SignIn(SignInViewModel model)
+        public async Task<AuthResult> SignIn(SignInViewModel model)
         {
             try
             {
@@ -70,25 +66,21 @@ namespace LMS.Services
                             .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
                         var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
                         var token = GenerateToken(systemUser);
-                        return _apiResponseHelper.GenerateApiResponse<AuthResult>(
-                            signInResult,
-                            "Signed in successfully!",
-                            new AuthResult(
+                        return new AuthResult(
                                 new JwtSecurityTokenHandler().WriteToken(token),
                                 token.ValidTo,
                                 systemUserViewModel
-                            )
-                        );
+                            );
                     }
                 }
-                return new ApiResponse<AuthResult>(signInResult, "Signed in failed! Incorrect username or password.");
-            } catch(Exception ex)
+                throw new Exception("Signed in failed! Incorrect username or password.");
+            } catch(Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<AuthResult>(false, ex.Message);
+                throw;
             }
         }
 
-        public async Task<ApiResponse<AuthResult>> SignUp(SignUpViewModel model)
+        public async Task<AuthResult> SignUp(SignUpViewModel model)
         {
             try
             {
@@ -103,25 +95,21 @@ namespace LMS.Services
                             .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
                         var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
                         var token = GenerateToken(systemUser);
-                        return _apiResponseHelper.GenerateApiResponse<AuthResult>(
-                            signUpResult,
-                            "Signed up successfully!",
-                            new AuthResult(
+                        return new AuthResult(
                                 new JwtSecurityTokenHandler().WriteToken(token),
                                 token.ValidTo,
                                 systemUserViewModel
-                            )
-                        );
+                            );
                     }
                 }
-                return _apiResponseHelper.GenerateApiResponse<AuthResult>(signUpResult, "Signed up failed! Incorrect username or password.");
+                throw new Exception("Signed up failed! Incorrect username or password.");
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<AuthResult>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<bool>> ResetPassword(ResetPasswordViewModel model)
+        public async Task<bool> ResetPassword(ResetPasswordViewModel model)
         {
             try
             {
@@ -131,57 +119,57 @@ namespace LMS.Services
                     var passwordCheckResult = await _userManager.CheckPasswordAsync(loggedInSystemUser, model.OldPassword);
                     if (passwordCheckResult)
                     {
+                        model.Token = string.IsNullOrEmpty(model.Token) ? await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser): model.Token;
                         var result = await _userManager.ResetPasswordAsync(loggedInSystemUser, model.Token, model.NewPassword);
-                        if(result is not null && result.Succeeded)
-                            return _apiResponseHelper.GenerateApiResponse<bool>(result.Succeeded, "Password reset successfully!", result.Succeeded);
-                        return _apiResponseHelper.GenerateApiResponse<bool>(false, "Password reset failed! Something went wrong.");
+                        if (result is not null && result.Succeeded)
+                            return result.Succeeded;
+                        throw new Exception("Password reset failed! Something went wrong.");
                     }
-                    return _apiResponseHelper.GenerateApiResponse<bool>(false, "Incorrect password!");
+                    throw new Exception("Incorrect password!");
                 }
-                return _apiResponseHelper.GenerateApiResponse<bool>(false, "System user not found!");
+                throw new Exception("System user not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<bool>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<string>> GetPasswordResetToken()
+        public async Task<string> GetPasswordResetToken()
         {
             try
             {
                 var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
                 if (loggedInSystemUser is not null)
                 {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser);
-                    return _apiResponseHelper.GenerateApiResponse<string>(true, token);
+                    return await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser);
                 }
-                return _apiResponseHelper.GenerateApiResponse<string>(false, "System user not found!");
+                throw new Exception("System user not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<string>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> GetLoggedInSystemUser()
+        public async Task<SystemUserViewModel> GetLoggedInSystemUser()
         {
             try
             {
                 var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
                 if (loggedInSystemUser is not null)
                 {
-                    var systemUser = _appDbContext.SystemUsers
+                    var systemUser = await _appDbContext.SystemUsers
                         .Include(x => x.Role)
                         .Include(x => x.Leaves)
                         .Include(x => x.ReviewedLeaves)
+                        .Include(x => x.EmployeesUnderSupervision)
                         .FirstOrDefaultAsync(x => x.Id == loggedInSystemUser.Id);
-                    var systemUserViewModel = _mapper.Map<SystemUserViewModel>(loggedInSystemUser);
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, systemUserViewModel);
+                    return _mapper.Map<SystemUserViewModel>(loggedInSystemUser);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "System user not found!");
+                throw new Exception("System user not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
         public async Task<bool> SignInAsync(SignInViewModel model, bool lockoutOnFailure = false)

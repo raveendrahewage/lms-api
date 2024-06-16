@@ -5,11 +5,11 @@ namespace LMS.Services.Interfaces
 {
     public interface IEventService
     {
-        Task<ApiResponse<EventViewModel>> CreateEvent(EventViewModel model);
-        Task<ApiResponse<EventViewModel>> DeleteEventById(int id);
-        Task<ApiResponse<List<EventViewModel>>> GetAllEvents();
-        Task<ApiResponse<List<EventViewModel>>> GetLeaveAndEventsBetweenDate(DateTime startDate, DateTime endDate);
-        Task<ApiResponse<EventViewModel>> GetEventById(int id);
-        Task<ApiResponse<EventViewModel>> UpdateEvent(EventViewModel model);
+        Task<EventViewModel> CreateEvent(EventViewModel model);
+        Task<EventViewModel> DeleteEventById(int id);
+        Task<List<EventViewModel>> GetAllEvents(int? page, int? size);
+        Task<List<EventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate);
+        Task<EventViewModel> GetEventById(int id);
+        Task<EventViewModel> UpdateEvent(EventViewModel model);
     }
 }

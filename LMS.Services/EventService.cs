@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using LMS.Data.Models;
 using LMS.Data;
-using LMS.Services.Helpers.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +14,8 @@ using LMS.Services.Responses;
 using Microsoft.EntityFrameworkCore;
 using LMS.Data.Enum;
 using LMS.Services.Interfaces;
+using Azure;
+using System.Drawing;
 
 namespace LMS.Services
 {
@@ -22,33 +23,30 @@ namespace LMS.Services
     {
         private readonly ApplicationDbContext _appDbContext;
         private readonly IMapper _mapper;
-        private readonly IApiResponseHelper _apiResponseHelper;
 
         public EventService(
             ApplicationDbContext appDbContext,
-            IMapper mapper,
-            IApiResponseHelper apiResponseHelper
+            IMapper mapper
         )
         {
             _appDbContext = appDbContext;
             _mapper = mapper;
-            _apiResponseHelper = apiResponseHelper;
         }
         
-        public async Task<ApiResponse<EventViewModel>> CreateEvent(EventViewModel model)
+        public async Task<EventViewModel> CreateEvent(EventViewModel model)
         {
             try
             {
                 var eventToBeCreated = _mapper.Map<Event>(model);
                 var result = await _appDbContext.Events.AddAsync(eventToBeCreated);
-                _appDbContext.SaveChanges();
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, "Event created successfully!",model);
-            } catch ( Exception ex )
+                await _appDbContext.SaveChangesAsync();
+                return model;
+            } catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<EventViewModel>> UpdateEvent(EventViewModel model)
+        public async Task<EventViewModel> UpdateEvent(EventViewModel model)
         {
             try
             {
@@ -58,46 +56,53 @@ namespace LMS.Services
                 {
                     var result = _appDbContext.Events.Update(eventToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
-                    return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, "Event updated successfully!", model);
+                    return model;
                 }
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, "Event updated successfully!", model);
+                throw new Exception("Event not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<List<EventViewModel>>> GetAllEvents()
+        public async Task<List<EventViewModel>> GetAllEvents(int? page, int? size)
         {
             try
             {
-                var events = await _appDbContext.Events
-                    .ToListAsync();
-                var eventsViewModel = _mapper.Map<List<EventViewModel>>(events);
-                return _apiResponseHelper.GenerateApiResponse<List<EventViewModel>>(true, eventsViewModel);
+                List<Event> events = new List<Event>();
+                if (page.HasValue && size.HasValue && page > 0 && size > 0)
+                {
+                    events = await _appDbContext.Events
+                    .Skip((page.Value - 1) * size.Value)
+                    .Take(size.Value)
+                        .ToListAsync();
+                }
+                else
+                {
+                    events = await _appDbContext.Events.ToListAsync();
+                }
+                return _mapper.Map<List<EventViewModel>>(events);
             }
             catch (Exception ex)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<EventViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<List<EventViewModel>>> GetLeaveAndEventsBetweenDate(DateTime startDate, DateTime endDate)
+        public async Task<List<EventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate)
         {
             try
             {
                 var events = await _appDbContext.Events
                     .Where(x => x.StartDate >= startDate && x.EndDate <= endDate)
                     .ToListAsync();
-                var eventsViewModel = _mapper.Map<List<EventViewModel>>(events);
-                _appDbContext.SaveChanges();
-                return _apiResponseHelper.GenerateApiResponse<List<EventViewModel>>(true, eventsViewModel);
+                return _mapper.Map<List<EventViewModel>>(events);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<EventViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<EventViewModel>> GetEventById(int id)
+        public async Task<EventViewModel> GetEventById(int id)
         {
             try
             {
@@ -105,18 +110,16 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(dbEvent is not null)
                 {
-                    var leaveTypeViewModel = _mapper.Map<EventViewModel>(dbEvent);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, leaveTypeViewModel);
+                    return _mapper.Map<EventViewModel>(dbEvent);
                 }
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(false, "Event not found!");
+                throw new Exception("Event not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<EventViewModel>> DeleteEventById(int id)
+        public async Task<EventViewModel> DeleteEventById(int id)
         {
             try
             {
@@ -125,15 +128,15 @@ namespace LMS.Services
                 if(dbEvent is not null)
                 {
                     dbEvent.Status = DataRecordStatus.Deleted;
-                    var leaveTypeViewModel = _mapper.Map<EventViewModel>(dbEvent);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, "Event deleted successfully!",leaveTypeViewModel);
+                    _appDbContext.Events.Update(dbEvent);
+                    await _appDbContext.SaveChangesAsync();
+                    return _mapper.Map<EventViewModel>(dbEvent);
                 }
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(true, "Event not found!");
+                throw new Exception("Event not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<EventViewModel>(false, ex.Message);
+                throw;
             }
         }
     }

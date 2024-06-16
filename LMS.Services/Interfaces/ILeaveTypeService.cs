@@ -5,11 +5,11 @@ namespace LMS.Services.Interfaces
 {
     public interface ILeaveTypeService
     {
-        Task<ApiResponse<LeaveTypeViewModel>> CreateLeaveType(LeaveTypeViewModel model);
-        Task<ApiResponse<LeaveTypeViewModel>> DeleteLeaveTypeById(int id);
-        Task<ApiResponse<List<LeaveTypeViewModel>>> GetAllLeaveTypes();
-        Task<ApiResponse<List<LeaveTypeViewModel>>> GetLeavesTypeByName(string typeName);
-        Task<ApiResponse<LeaveTypeViewModel>> GetLeaveTypeById(int id);
-        Task<ApiResponse<LeaveTypeViewModel>> UpdateLeaveType(LeaveTypeViewModel model);
+        Task<LeaveTypeViewModel> CreateLeaveType(LeaveTypeViewModel model);
+        Task<LeaveTypeViewModel> DeleteLeaveTypeById(int id);
+        Task<List<LeaveTypeViewModel>> GetAllLeaveTypes();
+        Task<List<LeaveTypeViewModel>> GetLeavesTypeByName(string typeName);
+        Task<LeaveTypeViewModel> GetLeaveTypeById(int id);
+        Task<LeaveTypeViewModel> UpdateLeaveType(LeaveTypeViewModel model);
     }
 }

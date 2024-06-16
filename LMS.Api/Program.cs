@@ -1,4 +1,5 @@
 using AutoMapper;
+using LMS.Api.Middleware;
 using LMS.Data;
 using LMS.Data.Models;
 using LMS.Services;
@@ -41,8 +42,8 @@ builder.Services.AddIdentity<SystemUser, SystemRole>(options =>
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.";
         options.User.RequireUniqueEmail = true;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(opt => {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -55,14 +56,14 @@ builder.Services.AddAuthentication(opt => {
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidateLifetime = true,
+        //ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidAudience = JWTSetting["ValidAudience"],
         ValidIssuer = JWTSetting["ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSetting.GetSection("SecurityKey").Value!))
     };
 });
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
@@ -75,6 +76,7 @@ builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
+builder.Services.AddScoped<ILeaveService, LeaveService>();
 builder.Services.AddScoped<IEventService, EventService>();
 
 
@@ -124,6 +126,7 @@ app.UseCors(option =>
     option.AllowAnyHeader();
 });
 
+app.UseMiddleware<ApiExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 

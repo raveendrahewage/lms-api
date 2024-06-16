@@ -4,30 +4,32 @@ using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Drawing;
+using System.Security.Policy;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace LMS.Api.Controllers
 {
     [Authorize]
-    [Route("api/leave-type")]
+    [Route("api/leave")]
     [ApiController]
-    public class LeaveTypeController : ControllerBase
+    public class LeaveController : ControllerBase
     {
-        private readonly ILeaveTypeService _leaveTypeService;
+        private readonly ILeaveService _leaveService;
         private readonly IApiResponseHelper _apiResponseHelper;
-        public LeaveTypeController(ILeaveTypeService leaveTypeService, IApiResponseHelper apiResponseHelper)
+        public LeaveController(ILeaveService leaveService, IApiResponseHelper apiResponseHelper)
         {
-            _leaveTypeService = leaveTypeService;
+            _leaveService = leaveService;
             _apiResponseHelper = apiResponseHelper;
         }
         [HttpPost]
-        public async Task<IActionResult> CreateNewLeaveType(LeaveTypeViewModel model)
+        public async Task<IActionResult> CreateNewLeave(LeaveViewModel model)
         {
             try
             {
-                var result = await _leaveTypeService.CreateLeaveType(model);
-                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave type created successfully!", result));
+                var result = await _leaveService.CreateLeave(model);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave created successfully!", result));
             }
             catch (Exception)
             {
@@ -35,12 +37,12 @@ namespace LMS.Api.Controllers
             }
         }
         [HttpPatch]
-        public async Task<IActionResult> UpdateLeaveType(LeaveTypeViewModel model)
+        public async Task<IActionResult> UpdateLeave(LeaveViewModel model)
         {
             try
             {
-                var result = await _leaveTypeService.UpdateLeaveType(model);
-                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave type updated successfully!", result));
+                var result = await _leaveService.UpdateLeave(model);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave updated successfully!", result));
             }
             catch (Exception)
             {
@@ -49,12 +51,12 @@ namespace LMS.Api.Controllers
         }
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteLeaveTypeById(int id)
+        public async Task<IActionResult> DeleteLeaveById(int id)
         {
             try
             {
-                var result = await _leaveTypeService.DeleteLeaveTypeById(id);
-                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave type deleted successfully!", result));
+                var result = await _leaveService.DeleteLeaveById(id);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave deleted successfully!", result));
             }
             catch (Exception)
             {
@@ -62,11 +64,11 @@ namespace LMS.Api.Controllers
             }
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllLeaveTypes()
+        public async Task<IActionResult> GetAllLeaves(int? page, int? size)
         {
             try
             {
-                var result = await _leaveTypeService.GetAllLeaveTypes();
+                var result = await _leaveService.GetAllLeaves(page, size);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)
@@ -76,11 +78,11 @@ namespace LMS.Api.Controllers
         }
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetLeaveTypeById(int id)
+        public async Task<IActionResult> GetLeaveById(int id)
         {
             try
             {
-                var result = await _leaveTypeService.GetLeaveTypeById(id);
+                var result = await _leaveService.GetLeaveById(id);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)
@@ -89,12 +91,12 @@ namespace LMS.Api.Controllers
             }
         }
         [HttpGet]
-        [Route("get-leave-type-by-name/{typeName}")]
-        public async Task<IActionResult> GetLeavesTypeByName(string typeName)
+        [Route("get-leaves-between")]
+        public async Task<IActionResult> GetLeavesBetween(DateTime startDate, DateTime endDate)
         {
             try
             {
-                var result = await _leaveTypeService.GetLeavesTypeByName(typeName);
+                var result = await _leaveService.GetLeavesBetween(startDate, endDate);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)

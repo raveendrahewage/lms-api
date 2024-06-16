@@ -1,77 +1,82 @@
 ﻿using AutoMapper;
+using Azure;
 using LMS.Data;
+using LMS.Data.Enum;
 using LMS.Data.Models;
-using LMS.Services.Helpers.Interfaces;
+using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LMS.Services
 {
-    public class LeaveService
+    public class LeaveService : ILeaveService
     {
         private readonly ApplicationDbContext _appDbContext;
         private readonly IMapper _mapper;
-        private readonly IApiResponseHelper _apiResponseHelper;
         public LeaveService(
             ApplicationDbContext appDbContext,
-            IMapper mapper,
-            IApiResponseHelper apiResponseHelper
+            IMapper mapper
         )
         {
             _appDbContext = appDbContext;
             _mapper = mapper;
-            _apiResponseHelper = apiResponseHelper;
         }
-        public async Task<ApiResponse<LeaveViewModel>> CreateLeave(LeaveViewModel model)
+        public async Task<LeaveViewModel> CreateLeave(LeaveViewModel model)
         {
             try
             {
                 var leaveToBeCreated = _mapper.Map<Leave>(model);
                 var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
                 _appDbContext.SaveChanges();
-                return _apiResponseHelper.GenerateApiResponse<LeaveViewModel>(true, "Leave created successfully!", model);
+                return model;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<LeaveViewModel>> UpdateLeave(LeaveViewModel model)
+        public async Task<LeaveViewModel> UpdateLeave(LeaveViewModel model)
         {
             try
             {
-                var leaveToBeUpdated = _mapper.Map<Leave>(model);
-                var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
-                await _appDbContext.SaveChangesAsync();
-                return _apiResponseHelper.GenerateApiResponse<LeaveViewModel>(true, "Leave updated successfully!", model);
+                var leave = await _appDbContext.Leaves
+                    .FirstOrDefaultAsync(x => x.Id == model.Id);
+                if(leave is not null )
+                {
+                    var leaveToBeUpdated = _mapper.Map<LeaveViewModel, Leave>(model, leave);
+                    _appDbContext.Leaves.Update(leaveToBeUpdated);
+                    await _appDbContext.SaveChangesAsync();
+                    return _mapper.Map<LeaveViewModel>(leaveToBeUpdated);
+                }
+                throw new Exception("Leave not found!");
             }
             catch (Exception ex)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<List<LeaveViewModel>>> GetAllLeavesByEmployeeId(int id)
+        public async Task<List<LeaveViewModel>> GetAllLeavesByEmployeeId(int id)
         {
             try
             {
                 var leaves = await _appDbContext.Leaves
                     .Where(x => x.EmployeeId == id)
                     .ToListAsync();
-                var leavesViewModel = _mapper.Map<List<LeaveViewModel>>(leaves);
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveViewModel>>(true, leavesViewModel);
+                return _mapper.Map<List<LeaveViewModel>>(leaves);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<LeaveViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<LeaveTypeViewModel>> GetLeaveById(int id)
+        public async Task<LeaveTypeViewModel> GetLeaveById(int id)
         {
             try
             {
@@ -79,15 +84,70 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if (leave is not null)
                 {
-                    var leaveViewModel = _mapper.Map<LeaveTypeViewModel>(leave);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(true, leaveViewModel);
+                    return _mapper.Map<LeaveTypeViewModel>(leave);
                 }
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, "Leave not found!");
+                throw new Exception("Leave not found!");
             }
             catch (Exception ex)
             {
-                return _apiResponseHelper.GenerateApiResponse<LeaveTypeViewModel>(false, ex.Message);
+                throw;
+            }
+        }
+        public async Task<List<LeaveViewModel>> GetAllLeaves(int? page, int? size)
+        {
+            try
+            {
+                List<Leave> leaves = new List<Leave>();
+                if (page.HasValue && size.HasValue && page > 0 && size > 0)
+                {
+                    leaves = await _appDbContext.Leaves
+                    .Skip((page.Value - 1) * size.Value)
+                    .Take(size.Value)
+                        .ToListAsync();
+                }
+                else
+                {
+                    leaves = await _appDbContext.Leaves.ToListAsync();
+                }
+                return _mapper.Map<List<LeaveViewModel>>(leaves);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        public async Task<List<LeaveViewModel>> GetLeavesBetween(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var leaves = await _appDbContext.Leaves
+                    .Where(x => x.FromDate >= startDate && x.FromDate <= endDate)
+                    .ToListAsync();
+                return _mapper.Map<List<LeaveViewModel>>(leaves);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<LeaveViewModel> DeleteLeaveById(int id)
+        {
+            try
+            {
+                var leave = await _appDbContext.Leaves
+                    .FirstOrDefaultAsync(x => x.Id == id);
+                if (leave is not null)
+                {
+                    leave.Status = DataRecordStatus.Deleted;
+                    _appDbContext.Leaves.Update(leave);
+                    await _appDbContext.SaveChangesAsync();
+                    return _mapper.Map<LeaveViewModel>(leave);
+                }
+                throw new Exception("Leave not found!");
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

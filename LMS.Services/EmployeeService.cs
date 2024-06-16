@@ -2,7 +2,6 @@
 using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
@@ -28,7 +27,6 @@ namespace LMS.Services
         private readonly UserManager<SystemUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
-        private readonly IApiResponseHelper _apiResponseHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public EmployeeService(
@@ -38,7 +36,6 @@ namespace LMS.Services
             UserManager<SystemUser> userManager,
             IConfiguration configuration,
             IMapper mapper,
-            IApiResponseHelper apiResponseHelper,
             IHttpContextAccessor httpContextAccessor
         )
         {
@@ -48,26 +45,33 @@ namespace LMS.Services
             _userManager = userManager;
             _configuration = configuration;
             _mapper = mapper;
-            _apiResponseHelper = apiResponseHelper;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ApiResponse<List<SystemUserViewModel>>> GetAllEmployees(int page, int size)
+        public async Task<List<SystemUserViewModel>> GetAllEmployees(int? page, int? size)
         {
             try
             {
-                var systemUsers = await _appDbContext.SystemUsers
-                    .Skip((page - 1) * size).Take(size)
-                    .ToListAsync();
-                var employees = _mapper.Map<List<SystemUserViewModel>>(systemUsers);
-                return _apiResponseHelper.GenerateApiResponse<List<SystemUserViewModel>>(true, employees);
+                List<SystemUser> systemUsers = new List<SystemUser>();
+                if (page.HasValue && size.HasValue && page > 0 && size > 0)
+                {
+                    systemUsers= await _appDbContext.SystemUsers
+                        .Skip((page.Value - 1) * size.Value)
+                        .Take(size.Value)
+                        .ToListAsync();
+                }
+                else
+                {
+                    systemUsers= await _appDbContext.SystemUsers.ToListAsync();
+                }
+                return _mapper.Map<List<SystemUserViewModel>>(systemUsers);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<SystemUserViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> GetEmployeeById(int id)
+        public async Task<SystemUserViewModel> GetEmployeeById(int id)
         {
             try
             {
@@ -79,17 +83,16 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(systemUser is not null)
                 {
-                    var employee = _mapper.Map<SystemUserViewModel>(systemUser);
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, employee);
+                    return _mapper.Map<SystemUserViewModel>(systemUser);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "Employee not found!");
+                throw new Exception("Employee not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> GetEmployeeByFullName(string fullName)
+        public async Task<SystemUserViewModel> GetEmployeeByFullName(string fullName)
         {
             try
             {
@@ -101,17 +104,16 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => (x.FirstName.ToLower().Trim() + " " + x.LastName.ToLower().Trim()).Equals(fullName.Trim().ToLower()));
                 if(systemUser is not null)
                 {
-                    var employee = _mapper.Map<SystemUserViewModel>(systemUser);
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, employee);
+                    return _mapper.Map<SystemUserViewModel>(systemUser);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "Employee not found!");
+                throw new Exception("Employee not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> CreateNewEmployee(SignUpViewModel model)
+        public async Task<SystemUserViewModel> CreateNewEmployee(SignUpViewModel model)
         {
             try
             {
@@ -119,18 +121,13 @@ namespace LMS.Services
                 if (signUpResult)
                 {
                     var systemUser = await _userManager.FindByEmailAsync(model.Email);
-                    var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
-                    return new ApiResponse<SystemUserViewModel>(
-                        signUpResult,
-                        "Employee created successfully!",
-                        systemUserViewModel
-                    );
+                    return _mapper.Map<SystemUserViewModel>(systemUser);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(signUpResult, "Employee was not created! Something went wrong.");
+                throw new Exception("Employee was not created! Something went wrong.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
         public async Task<bool> CreateSystemUserAsync(SignUpViewModel model)
@@ -149,31 +146,43 @@ namespace LMS.Services
             }
         }
 
-        public async Task<ApiResponse<SystemUserViewModel>> UpdateEmployee(SystemUserViewModel model)
+        public async Task<SystemUserViewModel> UpdateEmployee(SystemUserViewModel model)
         {
-            try
+            using (var transaction = _appDbContext.Database.BeginTransaction())
             {
-                var systemUserToBeUpdated = await _appDbContext.SystemUsers
-                    .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if (systemUserToBeUpdated is not null)
+                try
                 {
-                    systemUserToBeUpdated.FirstName = model.FirstName;
-                    systemUserToBeUpdated.LastName = model.LastName;
-                    systemUserToBeUpdated.PhoneNumber = model.PhoneNumber;
-                    systemUserToBeUpdated.RoleId = model.RoleId;
-                    systemUserToBeUpdated.SupervisorId = model.SupervisorId;
-                    _appDbContext.SystemUsers.Update(systemUserToBeUpdated);
-                    await _appDbContext.SaveChangesAsync();
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, "Employee updated successfully!", model);
+                    var systemUser = await _appDbContext.SystemUsers
+                        .FirstOrDefaultAsync(x => x.Id == model.Id);
+                    if (systemUser is not null)
+                    {
+                        systemUser.FirstName = model.FirstName;
+                        systemUser.LastName = model.LastName;
+                        systemUser.PhoneNumber = model.PhoneNumber;
+                        systemUser.Email = model.Email;
+                        systemUser.UserName = model.Email;
+                        systemUser.NormalizedEmail = model.Email;
+                        systemUser.NormalizedUserName = model.Email;
+                        systemUser.SupervisorId = model.SupervisorId.HasValue && model.SupervisorId.Value > 0 ? model.SupervisorId: null;
+                        var result = await _userManager.UpdateAsync(systemUser);
+                        if (result.Succeeded)
+                        {
+                            await _appDbContext.SaveChangesAsync();
+                            transaction.Commit();
+                            return _mapper.Map<SystemUserViewModel>(systemUser);
+                        }
+                        throw new Exception("Updating failed!. Something went wrong.");
+                    }
+                    throw new Exception("Employee not found!");
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "Employee not found!");
-            }
-            catch (Exception ex)
-            {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
-        public async Task<ApiResponse<List<SystemUserViewModel>>> GetEmployeesUnderSupervision(int id)
+        public async Task<List<SystemUserViewModel>> GetEmployeesUnderSupervision(int id)
         {
             try
             {
@@ -183,17 +192,16 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(systemUser is not null)
                 {
-                    var employeesUnderSupervisionViewModel = _mapper.Map<List<SystemUserViewModel>>(systemUser?.EmployeesUnderSupervision);
-                    return _apiResponseHelper.GenerateApiResponse<List<SystemUserViewModel>>(true, employeesUnderSupervisionViewModel);
+                    return _mapper.Map<List<SystemUserViewModel>>(systemUser?.EmployeesUnderSupervision);
                 }
-                return _apiResponseHelper.GenerateApiResponse<List<SystemUserViewModel>>(false, "Employee not found!");
+                throw new Exception("Employee not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<List<SystemUserViewModel>>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> DeleteEmployeeById(int id)
+        public async Task<SystemUserViewModel> DeleteEmployeeById(int id)
         {
             try
             {
@@ -202,18 +210,18 @@ namespace LMS.Services
                 if (employee is not null)
                 {
                     employee.Status = DataRecordStatus.Deleted;
-                    var employeeViewModel = _mapper.Map<SystemUserViewModel>(employee);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, "Employee deleted successfully!", employeeViewModel);
+                    _appDbContext.SystemUsers.Update(employee);
+                    await _appDbContext.SaveChangesAsync();
+                   return _mapper.Map<SystemUserViewModel>(employee);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "Employee not found!");
+                throw new Exception("Employee not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
-        public async Task<ApiResponse<SystemUserViewModel>> InactivateEmployeeById(int id)
+        public async Task<SystemUserViewModel> InactivateEmployeeById(int id)
         {
             try
             {
@@ -222,15 +230,15 @@ namespace LMS.Services
                 if (employee is not null)
                 {
                     employee.Status = DataRecordStatus.Inactive;
-                    var employeeViewModel = _mapper.Map<SystemUserViewModel>(employee);
-                    _appDbContext.SaveChanges();
-                    return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(true, "Employee inactivated successfully!", employeeViewModel);
+                    _appDbContext.SystemUsers.Update(employee);
+                    await _appDbContext.SaveChangesAsync();
+                    return _mapper.Map<SystemUserViewModel>(employee);
                 }
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, "Employee not found!");
+                throw new Exception("Employee not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return _apiResponseHelper.GenerateApiResponse<SystemUserViewModel>(false, ex.Message);
+                throw;
             }
         }
     }

@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace LMS.Services.Responses
 {
-    public class ApiResponse<T>
+    public class ApiResponse
     {
         public ApiResponse(
             bool success,
-            T? data
+            object? data
         )
         {
             this.Success = success;
@@ -29,14 +29,14 @@ namespace LMS.Services.Responses
         public ApiResponse(
             bool success,
             string message,
-            T? data
+            object? data
         ) {
             this.Success = success;
             this.Message = message;
             this.Data = data;
         }
         public bool Success { get; set; }
-        public T? Data { get; set; }
+        public object? Data { get; set; }
         public string Message { get; set; } = string.Empty;
     }
 }

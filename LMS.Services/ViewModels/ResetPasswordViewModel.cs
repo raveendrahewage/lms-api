@@ -9,7 +9,6 @@ namespace LMS.Services.ViewModels
 {
     public class ResetPasswordViewModel
     {
-        [Required]
         public string Token { get; set; } = string.Empty;
         [Required]
         public string OldPassword { get; set; } = string.Empty;
