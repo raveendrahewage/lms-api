@@ -153,6 +153,7 @@ namespace LMS.Services
                 try
                 {
                     var systemUser = await _appDbContext.SystemUsers
+                        .Include(x =>x.Role)
                         .FirstOrDefaultAsync(x => x.Id == model.Id);
                     if (systemUser is not null)
                     {
@@ -164,6 +165,7 @@ namespace LMS.Services
                         systemUser.NormalizedEmail = model.Email;
                         systemUser.NormalizedUserName = model.Email;
                         systemUser.SupervisorId = model.SupervisorId.HasValue && model.SupervisorId.Value > 0 ? model.SupervisorId: null;
+                        systemUser.Status = model.Status;
                         var result = await _userManager.UpdateAsync(systemUser);
                         if (result.Succeeded)
                         {
