@@ -1,4 +1,6 @@
 ﻿using LMS.Data.Enum;
+using LMS.Services.Common;
+using LMS.Services.Constants;
 using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
@@ -27,11 +29,27 @@ namespace LMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllEmployees(int? page, int? size)
+        [Route("get-employees")]
+        public async Task<IActionResult> GetAllEmployees()
         {
             try
             {
-                var result = await _employeeService.GetAllEmployees(page, size);
+                var result = await _employeeService.GetAllEmployees();
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("get-employees-ssr")]
+        public async Task<IActionResult> GetAllEmployeesSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var result = await _employeeService.GetAllEmployeesSsr(dataTableConfiguration);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             } catch (Exception) {
                 throw;

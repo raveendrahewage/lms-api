@@ -20,6 +20,9 @@ namespace LMS.Services.Mappings
                 .ForMember(d => d.NormalizedEmail, opt => opt.MapFrom(s => s.Email))
                 .ForMember(d => d.NormalizedUserName, opt => opt.MapFrom(s => s.Email));
             CreateMap<SystemUser, SystemUserViewModel>();
+            CreateMap<SystemUser, SystemUserListItemViewModel>()
+                .ForMember(d => d.RoleName, opt => opt.MapFrom(s =>s.Role.Name))
+                .ForMember(d => d.SupervisorName, opt => opt.MapFrom(s =>s.Supervisor.FullName));
             CreateMap<SystemRole, SystemRoleViewModel>().ReverseMap();
             CreateMap<SignUpViewModel, SystemUser>()
                 .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.Email))

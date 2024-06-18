@@ -2,6 +2,9 @@
 using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
+using LMS.Services.Common;
+using LMS.Services.Constants;
+using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
@@ -48,23 +51,37 @@ namespace LMS.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<List<SystemUserViewModel>> GetAllEmployees(int? page, int? size)
+        public async Task<List<SystemUserViewModel>> GetAllEmployees()
         {
             try
             {
-                List<SystemUser> systemUsers = new List<SystemUser>();
-                if (page.HasValue && size.HasValue && page > 0 && size > 0)
-                {
-                    systemUsers= await _appDbContext.SystemUsers
-                        .Skip((page.Value - 1) * size.Value)
-                        .Take(size.Value)
+                var systemUsers = await _appDbContext.SystemUsers
+                        .Include(x => x.Role)
+                        .Include(x => x.Leaves)
+                        .Include(x => x.ReviewedLeaves)
+                        .Include(x => x.Supervisor)
+                        .Include(x => x.EmployeesUnderSupervision)
                         .ToListAsync();
-                }
-                else
-                {
-                    systemUsers= await _appDbContext.SystemUsers.ToListAsync();
-                }
                 return _mapper.Map<List<SystemUserViewModel>>(systemUsers);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<DataTableResult<SystemUserListItemViewModel>> GetAllEmployeesSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var systemUsers = await _appDbContext.SystemUsers
+                        .IgnoreQueryFilters()
+                        .Include(x => x.Role)
+                        .Include(x => x.Supervisor)
+                        .Where(x => x.Status == DataRecordStatus.Active || x.Status == DataRecordStatus.Inactive)
+                        .ToListAsync();
+                var systemUserViewModels = _mapper.Map<List<SystemUserListItemViewModel>>(systemUsers);
+                return DataTableResultHandler<SystemUserListItemViewModel>.ResultToSsr(systemUserViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
             {
@@ -78,6 +95,7 @@ namespace LMS.Services
                 var systemUser = await _appDbContext.SystemUsers
                     .Include(x => x.Role)
                     .Include(x => x.Leaves)
+                    .Include(x => x.Supervisor) 
                     .Include(x => x.ReviewedLeaves)
                     .Include(x => x.EmployeesUnderSupervision)
                     .FirstOrDefaultAsync(x => x.Id == id);
@@ -99,6 +117,7 @@ namespace LMS.Services
                 var systemUser = await _appDbContext.SystemUsers
                     .Include(x => x.Role)
                     .Include(x => x.Leaves)
+                    .Include(x => x.Supervisor)
                     .Include(x => x.ReviewedLeaves)
                     .Include(x => x.EmployeesUnderSupervision)
                     .FirstOrDefaultAsync(x => (x.FirstName.ToLower().Trim() + " " + x.LastName.ToLower().Trim()).Equals(fullName.Trim().ToLower()));

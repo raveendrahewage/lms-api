@@ -1,4 +1,6 @@
-﻿using LMS.Services.Responses;
+﻿using LMS.Services.Common;
+using LMS.Services.Constants;
+using LMS.Services.Responses;
 using LMS.Services.ViewModels;
 
 namespace LMS.Services.Interfaces
@@ -7,7 +9,8 @@ namespace LMS.Services.Interfaces
     {
         Task<SystemUserViewModel> CreateNewEmployee(SignUpViewModel model);
         Task<SystemUserViewModel> GetEmployeeById(int id);
-        Task<List<SystemUserViewModel>> GetAllEmployees(int? page, int? size);
+        Task<List<SystemUserViewModel>> GetAllEmployees();
+        Task<DataTableResult<SystemUserListItemViewModel>> GetAllEmployeesSsr(DataTableConfiguration dataTableConfiguration);
         Task<SystemUserViewModel> GetEmployeeByFullName(string fullName);
         Task<List<SystemUserViewModel>> GetEmployeesUnderSupervision(int id);
         Task<SystemUserViewModel> UpdateEmployee(SystemUserViewModel model);
