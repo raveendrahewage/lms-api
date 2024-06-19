@@ -20,7 +20,7 @@ namespace LMS.Services.ViewModels
         public string Email { get; set; } = string.Empty;
         [Required]
         public string Password { get; set; } = string.Empty;
-        public string? Phone { get; set; }
+        public string? PhoneNumber { get; set; }
         [Required]
         public int RoleId { get; set; }
         public int? SupervisorId { get; set; }

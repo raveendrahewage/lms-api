@@ -21,14 +21,17 @@ namespace LMS.Services
     {
         private readonly ApplicationDbContext _appDbContext;
         private readonly IMapper _mapper;
+        private readonly IAccountService _accountService;
 
         public LeaveTypeService(
             ApplicationDbContext appDbContext,
-            IMapper mapper
+            IMapper mapper,
+            IAccountService accountService
         )
         {
             _appDbContext = appDbContext;
-            _mapper = mapper;;
+            _mapper = mapper;
+            _accountService = accountService;
         }
         
         public async Task<LeaveTypeViewModel> CreateLeaveType(LeaveTypeViewModel model)
@@ -36,6 +39,7 @@ namespace LMS.Services
             try
             {
                 var leaveTypeToBeCreated = _mapper.Map<LeaveType>(model);
+                leaveTypeToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 var result = await _appDbContext.LeaveTypes.AddAsync(leaveTypeToBeCreated);
                 _appDbContext.SaveChanges();
                 return model;
@@ -48,10 +52,13 @@ namespace LMS.Services
         {
             try
             {
-                var leaveTypeToBeUpdated = await _appDbContext.LeaveTypes
+                var leaveType = await _appDbContext.LeaveTypes
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(leaveTypeToBeUpdated is not null)
+                if(leaveType is not null)
                 {
+                    var leaveTypeToBeUpdated = _mapper.Map<LeaveTypeViewModel, LeaveType>(model, leaveType);
+                    leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                    leaveTypeToBeUpdated.ModifiedDate = DateTime.Now;
                     _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<LeaveTypeViewModel>(leaveTypeToBeUpdated);
@@ -116,6 +123,8 @@ namespace LMS.Services
                 if(leaveType is not null)
                 {
                     leaveType.Status = DataRecordStatus.Deleted;
+                    leaveType.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                    leaveType.DeletedDate = DateTime.Now;
                     _appDbContext.LeaveTypes.Update(leaveType);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<LeaveTypeViewModel>(leaveType);

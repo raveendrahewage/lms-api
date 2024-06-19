@@ -23,14 +23,17 @@ namespace LMS.Services
     {
         private readonly ApplicationDbContext _appDbContext;
         private readonly IMapper _mapper;
+        private readonly IAccountService _accountService;
 
         public EventService(
             ApplicationDbContext appDbContext,
-            IMapper mapper
+            IMapper mapper,
+            IAccountService accountService
         )
         {
             _appDbContext = appDbContext;
             _mapper = mapper;
+            _accountService = accountService;
         }
         
         public async Task<EventViewModel> CreateEvent(EventViewModel model)
@@ -38,6 +41,7 @@ namespace LMS.Services
             try
             {
                 var eventToBeCreated = _mapper.Map<Event>(model);
+                eventToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 var result = await _appDbContext.Events.AddAsync(eventToBeCreated);
                 await _appDbContext.SaveChangesAsync();
                 return model;
@@ -50,10 +54,13 @@ namespace LMS.Services
         {
             try
             {
-                var eventToBeUpdated = await _appDbContext.Events
+                var dbEvent = await _appDbContext.Events
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(eventToBeUpdated is not null)
+                if(dbEvent is not null)
                 {
+                    var eventToBeUpdated = _mapper.Map<EventViewModel, Event>(model, dbEvent);
+                    eventToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                    eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     var result = _appDbContext.Events.Update(eventToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
                     return model;
@@ -128,6 +135,8 @@ namespace LMS.Services
                 if(dbEvent is not null)
                 {
                     dbEvent.Status = DataRecordStatus.Deleted;
+                    dbEvent.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                    dbEvent.DeletedDate = DateTime.Now;
                     _appDbContext.Events.Update(dbEvent);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<EventViewModel>(dbEvent);

@@ -19,13 +19,16 @@ namespace LMS.Services
     public class LeaveService : ILeaveService
     {
         private readonly ApplicationDbContext _appDbContext;
+        private readonly IAccountService _accountService;
         private readonly IMapper _mapper;
         public LeaveService(
             ApplicationDbContext appDbContext,
+            IAccountService accountService,
             IMapper mapper
         )
         {
             _appDbContext = appDbContext;
+            _accountService = accountService;
             _mapper = mapper;
         }
         public async Task<LeaveViewModel> CreateLeave(LeaveViewModel model)
@@ -33,6 +36,7 @@ namespace LMS.Services
             try
             {
                 var leaveToBeCreated = _mapper.Map<Leave>(model);
+                leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
                 _appDbContext.SaveChanges();
                 return model;
@@ -51,6 +55,8 @@ namespace LMS.Services
                 if(leave is not null )
                 {
                     var leaveToBeUpdated = _mapper.Map<LeaveViewModel, Leave>(model, leave);
+                    leaveToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                    leaveToBeUpdated.ModifiedDate = DateTime.Now;
                     _appDbContext.Leaves.Update(leaveToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<LeaveViewModel>(leaveToBeUpdated);
@@ -139,6 +145,8 @@ namespace LMS.Services
                 if (leave is not null)
                 {
                     leave.Status = DataRecordStatus.Deleted;
+                    leave.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                    leave.DeletedDate = DateTime.Now;
                     _appDbContext.Leaves.Update(leave);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<LeaveViewModel>(leave);

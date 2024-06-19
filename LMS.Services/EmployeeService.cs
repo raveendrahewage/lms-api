@@ -28,27 +28,24 @@ namespace LMS.Services
         private readonly RoleManager<SystemRole> _roleManager;
         private readonly SignInManager<SystemUser> _signInManager;
         private readonly UserManager<SystemUser> _userManager;
-        private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAccountService _accountService;
 
         public EmployeeService(
             ApplicationDbContext appDbContext,
             RoleManager<SystemRole> roleManager,
             SignInManager<SystemUser> signInManager,
             UserManager<SystemUser> userManager,
-            IConfiguration configuration,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor
+            IAccountService accountService
         )
         {
             _appDbContext = appDbContext;
             _roleManager = roleManager;
             _signInManager = signInManager;
             _userManager = userManager;
-            _configuration = configuration;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _accountService = accountService;
         }
 
         public async Task<List<SystemUserViewModel>> GetAllEmployees()
@@ -154,6 +151,7 @@ namespace LMS.Services
             try
             {
                 var newSystemUser = _mapper.Map<SignUpViewModel, SystemUser>(model);
+                newSystemUser.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 newSystemUser.SupervisorId = model.SupervisorId is not null && model.SupervisorId > 0 ? model.SupervisorId : null;
                 var signUpResult = await _userManager.CreateAsync(newSystemUser, model.Password);
                 if (signUpResult != null && signUpResult.Succeeded) return true;
@@ -185,6 +183,8 @@ namespace LMS.Services
                         systemUser.NormalizedUserName = model.Email;
                         systemUser.SupervisorId = model.SupervisorId.HasValue && model.SupervisorId.Value > 0 ? model.SupervisorId: null;
                         systemUser.Status = model.Status;
+                        systemUser.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                        systemUser.ModifiedDate = DateTime.Now;
                         var result = await _userManager.UpdateAsync(systemUser);
                         if (result.Succeeded)
                         {
@@ -231,6 +231,8 @@ namespace LMS.Services
                 if (employee is not null)
                 {
                     employee.Status = DataRecordStatus.Deleted;
+                    employee.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                    employee.DeletedDate = DateTime.Now;
                     _appDbContext.SystemUsers.Update(employee);
                     await _appDbContext.SaveChangesAsync();
                    return _mapper.Map<SystemUserViewModel>(employee);
@@ -251,6 +253,8 @@ namespace LMS.Services
                 if (employee is not null)
                 {
                     employee.Status = DataRecordStatus.Inactive;
+                    employee.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                    employee.ModifiedDate = DateTime.Now;
                     _appDbContext.SystemUsers.Update(employee);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<SystemUserViewModel>(employee);
