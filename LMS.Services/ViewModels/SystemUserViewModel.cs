@@ -17,6 +17,7 @@ namespace LMS.Services.ViewModels
         public string? PhoneNumber { get; set; }
         public int RoleId { get; set; }
         public int? SupervisorId { get; set; }
+        public string FullName => $"{FirstName} {LastName}";
         public virtual SystemUserViewModel? Supervisor { get; set; }
         public virtual List<SystemUserViewModel> EmployeesUnderSupervision { get; set; } = new List<SystemUserViewModel>();
         public virtual SystemRoleViewModel? Role { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LMS.Data.Enum
 {
-    public static class AuthClaims
+    public static class AuthClaim
     {
         public const string SysUserUserId = "SysUserUserId";
         public const string SysUserUsername = "SysUserUsername";

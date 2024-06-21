@@ -1,4 +1,5 @@
 ﻿using LMS.Data.Common;
+using LMS.Data.Enum;
 using LMS.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace LMS.Services.ViewModels
         [ForeignKey(nameof(Supervisor))]
         public int? ReviewedBy { get; set; }
 
+        public virtual List<DateWiseLeaveViewModel> DateWiseLeaves { get; } = [];
         public virtual LeaveTypeViewModel LeaveType { get; set; }
         public virtual SystemUserViewModel? Supervisor { get; set; }
         public virtual SystemUserViewModel Employee { get; set; }

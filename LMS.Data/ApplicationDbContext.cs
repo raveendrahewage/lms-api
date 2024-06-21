@@ -21,6 +21,7 @@ namespace LMS.Data
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<SystemUser> SystemUsers { get; set; }
         public DbSet<Leave> Leaves { get; set; }
+        public DbSet<DateWiseLeave> DateWiseLeaves { get; set; }
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Event> Events { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,6 +31,7 @@ namespace LMS.Data
             modelBuilder.ApplyConfiguration<SystemUser>(new SystemUsersConfiguration());
             modelBuilder.ApplyConfiguration<IdentityUserRole<int>>(new SystemUserRolesConfiguration());
             modelBuilder.ApplyConfiguration<Leave>(new LeavesConfiguration());
+            modelBuilder.ApplyConfiguration<DateWiseLeave>(new DateWiseLeavesConfiguration());
             modelBuilder.ApplyConfiguration<LeaveType>(new LeaveTypesConfiguration());
             modelBuilder.ApplyConfiguration<Event>(new EventsConfiguration());
         }

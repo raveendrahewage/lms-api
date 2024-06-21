@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LMS.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InIt : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -273,19 +273,48 @@ namespace LMS.Data.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "DateWiseLeaves",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LeaveId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LeaveDayType = table.Column<int>(type: "int", nullable: false),
+                    LeaveHalfDayType = table.Column<int>(type: "int", nullable: true),
+                    LeaveQuarterDayType = table.Column<int>(type: "int", nullable: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true),
+                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DateWiseLeaves", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DateWiseLeaves_Leaves_LeaveId",
+                        column: x => x.LeaveId,
+                        principalTable: "Leaves",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "ModifiedBy", "ModifiedDate", "Name", "NormalizedName", "Status" },
                 values: new object[,]
                 {
-                    { 1, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7777), null, null, null, null, "Admin", "ADMIN", 1 },
-                    { 2, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7787), null, null, null, null, "User", "USER", 1 }
+                    { 1, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5569), null, null, null, null, "Admin", "ADMIN", 1 },
+                    { 2, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5580), null, null, null, null, "User", "USER", 1 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "ModifiedBy", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RoleId", "SecurityStamp", "Status", "SupervisorId", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(8700), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
+                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(6463), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
@@ -342,6 +371,11 @@ namespace LMS.Data.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DateWiseLeaves_LeaveId",
+                table: "DateWiseLeaves",
+                column: "LeaveId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leaves_EmployeeId",
                 table: "Leaves",
                 column: "EmployeeId");
@@ -374,6 +408,9 @@ namespace LMS.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "DateWiseLeaves");
 
             migrationBuilder.DropTable(
                 name: "Events");

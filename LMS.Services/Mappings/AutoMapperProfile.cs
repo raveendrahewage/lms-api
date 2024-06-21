@@ -33,6 +33,7 @@ namespace LMS.Services.Mappings
             CreateMap<LeaveType, LeaveTypeViewModel>().ReverseMap();
             CreateMap<Leave, LeaveViewModel>().ReverseMap();
             CreateMap<Event, EventViewModel>().ReverseMap();
+            CreateMap<DateWiseLeave, DateWiseLeaveViewModel>().ReverseMap();
         }
     }
 }

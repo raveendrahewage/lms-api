@@ -22,6 +22,57 @@ namespace LMS.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("LMS.Data.Models.DateWiseLeave", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LeaveDayType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LeaveHalfDayType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LeaveId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LeaveQuarterDayType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaveId");
+
+                    b.ToTable("DateWiseLeaves");
+                });
+
             modelBuilder.Entity("LMS.Data.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -229,7 +280,7 @@ namespace LMS.Data.Migrations
                             Id = 1,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7777),
+                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5569),
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             Status = 1
@@ -239,7 +290,7 @@ namespace LMS.Data.Migrations
                             Id = 2,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(7787),
+                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5580),
                             Name = "User",
                             NormalizedName = "USER",
                             Status = 1
@@ -359,7 +410,7 @@ namespace LMS.Data.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 9, 17, 17, 27, 688, DateTimeKind.Local).AddTicks(8700),
+                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(6463),
                             Email = "superadmin@lms.com",
                             EmailConfirmed = true,
                             FirstName = "Super",
@@ -487,6 +538,17 @@ namespace LMS.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LMS.Data.Models.DateWiseLeave", b =>
+                {
+                    b.HasOne("LMS.Data.Models.Leave", "Leave")
+                        .WithMany("DateWiseLeaves")
+                        .HasForeignKey("LeaveId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Leave");
+                });
+
             modelBuilder.Entity("LMS.Data.Models.Leave", b =>
                 {
                     b.HasOne("LMS.Data.Models.SystemUser", "Employee")
@@ -580,6 +642,11 @@ namespace LMS.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("LMS.Data.Models.Leave", b =>
+                {
+                    b.Navigation("DateWiseLeaves");
                 });
 
             modelBuilder.Entity("LMS.Data.Models.LeaveType", b =>

@@ -21,6 +21,10 @@ namespace ACIS.Data.Configurations
                 .WithMany(r => r.ReviewedLeaves)
                 .HasForeignKey(u => u.ReviewedBy)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.HasMany(u => u.DateWiseLeaves)
+                .WithOne(r => r.Leave)
+                .HasForeignKey(u => u.LeaveId)
+                .OnDelete(DeleteBehavior.NoAction);
             builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);
         }
     }

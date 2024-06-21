@@ -181,7 +181,7 @@ namespace LMS.Services
                         systemUser.UserName = model.Email;
                         systemUser.NormalizedEmail = model.Email;
                         systemUser.NormalizedUserName = model.Email;
-                        systemUser.SupervisorId = model.SupervisorId.HasValue && model.SupervisorId.Value > 0 ? model.SupervisorId: null;
+                        systemUser.SupervisorId = model.SupervisorId;
                         systemUser.Status = model.Status;
                         systemUser.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                         systemUser.ModifiedDate = DateTime.Now;

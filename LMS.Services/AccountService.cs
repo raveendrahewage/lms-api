@@ -208,10 +208,10 @@ namespace LMS.Services
                 var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JWTSetting").GetSection("SecurityKey").Value!);
                 List<Claim> claims =
                 [
-                    new Claim(AuthClaims.SysUserUsername, systemUser.Email),
-                new Claim(AuthClaims.SysUserUserId, systemUser.Id.ToString()),
-                new Claim(AuthClaims.SysUserRole, systemUser.Role.Name),
-                new Claim(AuthClaims.SysUserRoleId, systemUser.Role.Id.ToString()),
+                    new Claim(AuthClaim.SysUserUsername, systemUser.Email),
+                new Claim(AuthClaim.SysUserUserId, systemUser.Id.ToString()),
+                new Claim(AuthClaim.SysUserRole, systemUser.Role.Name),
+                new Claim(AuthClaim.SysUserRoleId, systemUser.Role.Id.ToString()),
                 new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
                 new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
                 ];
@@ -234,12 +234,12 @@ namespace LMS.Services
         }
         public string GetCurrentLoggedInUsername()
         {
-            return _httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaims.SysUserUsername)
+            return _httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaim.SysUserUsername)
                 .Value;
         }
         public int GetCurrentLoggedInUserId()
         {
-            return Convert.ToInt32(_httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaims.SysUserUserId).Value);
+            return Convert.ToInt32(_httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaim.SysUserUserId).Value);
         }
     }
 }

@@ -25,6 +25,7 @@ namespace LMS.Data.Models
         [ForeignKey(nameof(Supervisor))]
         public int? ReviewedBy { get; set; }
 
+        public virtual List<DateWiseLeave> DateWiseLeaves { get; } = [];
         public virtual LeaveType LeaveType { get; set; }
         public virtual SystemUser? Supervisor { get; set; }
         public virtual SystemUser Employee { get; set; }

@@ -38,6 +38,10 @@ namespace LMS.Services
                 var leaveToBeCreated = _mapper.Map<Leave>(model);
                 leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
+                foreach (var systemUserLeaves in leaveToBeCreated.DateWiseLeaves)
+                {
+
+                }
                 _appDbContext.SaveChanges();
                 return model;
             }
