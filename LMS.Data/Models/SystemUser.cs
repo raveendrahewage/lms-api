@@ -34,6 +34,8 @@ namespace LMS.Data.Models
         public int? DeletedBy { get; set; }
         public DateTime? DeletedDate { get; set; }
         public DataRecordStatus Status { get; set; } = DataRecordStatus.Active;
+        [Timestamp]
+        public byte[] Version { get; set; }
         public virtual SystemUser? Supervisor { get; set; }
         public virtual List<SystemUser> EmployeesUnderSupervision { get; set; } = [];
         public virtual SystemRole Role { get; set; }

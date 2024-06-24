@@ -8,7 +8,7 @@ namespace LMS.Services.Constants
 {
     public enum SortMode
     {
-        ASC = 1,
-        DESC = 2
+        Asc = 1,
+        Desc = 2
     }
 }

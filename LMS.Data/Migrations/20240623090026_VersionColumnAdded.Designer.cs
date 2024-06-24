@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240621160146_InIt")]
-    partial class InIt
+    [Migration("20240623090026_VersionColumnAdded")]
+    partial class VersionColumnAdded
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,6 +68,12 @@ namespace LMS.Data.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
@@ -153,8 +159,8 @@ namespace LMS.Data.Migrations
                     b.Property<DateTime>("FromDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsApproved")
-                        .HasColumnType("bit");
+                    b.Property<int>("LeaveStatus")
+                        .HasColumnType("int");
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("int");
@@ -177,6 +183,12 @@ namespace LMS.Data.Migrations
 
                     b.Property<DateTime>("ToDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
@@ -283,7 +295,7 @@ namespace LMS.Data.Migrations
                             Id = 1,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5569),
+                            CreatedDate = new DateTime(2024, 6, 23, 14, 30, 26, 424, DateTimeKind.Local).AddTicks(27),
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             Status = 1
@@ -293,7 +305,7 @@ namespace LMS.Data.Migrations
                             Id = 2,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5580),
+                            CreatedDate = new DateTime(2024, 6, 23, 14, 30, 26, 424, DateTimeKind.Local).AddTicks(38),
                             Name = "User",
                             NormalizedName = "USER",
                             Status = 1
@@ -390,6 +402,12 @@ namespace LMS.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -413,7 +431,7 @@ namespace LMS.Data.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(6463),
+                            CreatedDate = new DateTime(2024, 6, 23, 14, 30, 26, 424, DateTimeKind.Local).AddTicks(1009),
                             Email = "superadmin@lms.com",
                             EmailConfirmed = true,
                             FirstName = "Super",
@@ -566,7 +584,7 @@ namespace LMS.Data.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("LMS.Data.Models.SystemUser", "Supervisor")
+                    b.HasOne("LMS.Data.Models.SystemUser", "Reviewer")
                         .WithMany("ReviewedLeaves")
                         .HasForeignKey("ReviewedBy")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -575,7 +593,7 @@ namespace LMS.Data.Migrations
 
                     b.Navigation("LeaveType");
 
-                    b.Navigation("Supervisor");
+                    b.Navigation("Reviewer");
                 });
 
             modelBuilder.Entity("LMS.Data.Models.SystemUser", b =>

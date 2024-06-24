@@ -2,6 +2,7 @@
 using LMS.Data.Enum;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,8 @@ namespace LMS.Data.Models
         public LeaveDayType LeaveDayType { get; set; } = LeaveDayType.FullDay;
         public LeaveHalfDayType? LeaveHalfDayType { get; set; }
         public LeaveQuarterDayType? LeaveQuarterDayType { get; set; }
+        [Timestamp]
+        public byte[] Version { get; set; }
 
         public virtual Leave Leave { get; set; }
     }

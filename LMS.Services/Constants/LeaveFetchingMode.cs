@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LMS.Data.Enum
+namespace LMS.Services.Constants
 {
-    public enum DataRecordStatus
+    public enum LeaveFetchingMode
     {
-        Active = 1,
-        Inactive = 2,
-        Deleted = 3,
+        All = 1,
+        OnlyMine = 2,
+        OnlyApprovals = 3
     }
 }

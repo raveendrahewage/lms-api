@@ -17,7 +17,7 @@ namespace ACIS.Data.Configurations
                 .WithMany(r => r.Leaves)
                 .HasForeignKey(u => u.EmployeeId)
                 .OnDelete(DeleteBehavior.NoAction);
-            builder.HasOne(u => u.Supervisor)
+            builder.HasOne(u => u.Reviewer)
                 .WithMany(r => r.ReviewedLeaves)
                 .HasForeignKey(u => u.ReviewedBy)
                 .OnDelete(DeleteBehavior.NoAction);
@@ -25,6 +25,11 @@ namespace ACIS.Data.Configurations
                 .WithOne(r => r.Leave)
                 .HasForeignKey(u => u.LeaveId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.Property(e => e.Version)
+                .IsRequired()
+                .IsRowVersion()
+                .IsConcurrencyToken()
+                .ValueGeneratedOnAddOrUpdate();
             builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);
         }
     }

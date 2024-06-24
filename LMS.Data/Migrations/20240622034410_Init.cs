@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LMS.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InIt : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -242,7 +242,7 @@ namespace LMS.Data.Migrations
                     FromDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ToDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
+                    LeaveStatus = table.Column<int>(type: "int", nullable: false),
                     DeniedReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ReviewedBy = table.Column<int>(type: "int", nullable: true),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
@@ -307,14 +307,14 @@ namespace LMS.Data.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "ModifiedBy", "ModifiedDate", "Name", "NormalizedName", "Status" },
                 values: new object[,]
                 {
-                    { 1, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5569), null, null, null, null, "Admin", "ADMIN", 1 },
-                    { 2, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(5580), null, null, null, null, "User", "USER", 1 }
+                    { 1, "initial", 0, new DateTime(2024, 6, 22, 9, 14, 10, 353, DateTimeKind.Local).AddTicks(6599), null, null, null, null, "Admin", "ADMIN", 1 },
+                    { 2, "initial", 0, new DateTime(2024, 6, 22, 9, 14, 10, 353, DateTimeKind.Local).AddTicks(6613), null, null, null, null, "User", "USER", 1 }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedBy", "CreatedDate", "DeletedBy", "DeletedDate", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "ModifiedBy", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RoleId", "SecurityStamp", "Status", "SupervisorId", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 6, 21, 21, 31, 45, 931, DateTimeKind.Local).AddTicks(6463), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
+                values: new object[] { 1, 0, "initial", 0, new DateTime(2024, 6, 22, 9, 14, 10, 353, DateTimeKind.Local).AddTicks(7473), null, null, "superadmin@lms.com", true, "Super", "Admin", true, null, null, null, "SUPERADMIN@LMS.COM", "SUPERADMIN@LMS.COM", "AQAAAAIAAYagAAAAEB96RXidUA3MA/QqigqlV2OEbUJsIUdP64w37HPYRKtMxGh2qU2SvC6BAS08KuS0Yw==", null, false, 1, "initial", 1, null, false, "superadmin@lms.com" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",

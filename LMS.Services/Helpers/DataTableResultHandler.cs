@@ -60,11 +60,11 @@ namespace LMS.Services.Helpers
         {
             switch (dataTableConfiguration.sortMode)
             {
-                case SortMode.ASC:
+                case SortMode.Asc:
                     list = list.OrderBy(x => x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))
                         .ToList();
                     break;
-                case SortMode.DESC:
+                case SortMode.Desc:
                     list = list.OrderByDescending(x =>
                         x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))
                         .ToList();

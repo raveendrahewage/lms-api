@@ -12,7 +12,7 @@ namespace LMS.Services.Common
         public int page {  get; set; }
         public int pageSize { get; set; }
         public string sortBy { get; set; } = "Id";
-        public SortMode sortMode { get; set; } = SortMode.ASC;
+        public SortMode sortMode { get; set; } = SortMode.Asc;
         public string search { get; set; } = string.Empty;
     }
 }

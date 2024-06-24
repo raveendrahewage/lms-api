@@ -17,6 +17,6 @@ namespace LMS.Services.ViewModels
         public LeaveHalfDayType? LeaveHalfDayType { get; set; }
         public LeaveQuarterDayType? LeaveQuarterDayType { get; set; }
 
-        public virtual Leave Leave { get; set; }
+        public virtual Leave? Leave { get; set; }
     }
 }

@@ -13,6 +13,11 @@ namespace ACIS.Data.Configurations
                 .WithMany(r => r.DateWiseLeaves)
                 .HasForeignKey(u => u.LeaveId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.Property(e => e.Version)
+                .IsRequired()
+                .IsRowVersion()
+                .IsConcurrencyToken()
+                .ValueGeneratedOnAddOrUpdate();
             builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);
         }
     }

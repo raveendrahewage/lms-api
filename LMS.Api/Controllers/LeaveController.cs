@@ -1,4 +1,6 @@
 ﻿using LMS.Services;
+using LMS.Services.Common;
+using LMS.Services.Constants;
 using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
@@ -49,6 +51,20 @@ namespace LMS.Api.Controllers
                 throw;
             }
         }
+        [HttpPost]
+        [Route("get-leaves-by-employee-id-ssr/{id}/{leaveFetchingMode}")]
+        public async Task<IActionResult> GetAllLeavesByEmployeeIdSsr(int id, LeaveFetchingMode leaveFetchingMode, DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var result = await _leaveService.GetAllLeavesByEmployeeIdSsr(id, leaveFetchingMode, dataTableConfiguration);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, "Leave created successfully!", result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
         [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> DeleteLeaveById(int id)
@@ -63,12 +79,13 @@ namespace LMS.Api.Controllers
                 throw;
             }
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAllLeaves(int? page, int? size)
+        [HttpPost]
+        [Route("get-all-leaves/ssr")]
+        public async Task<IActionResult> GetAllLeaves(DataTableConfiguration dataTableConfiguration)
         {
             try
             {
-                var result = await _leaveService.GetAllLeaves(page, size);
+                var result = await _leaveService.GetAllLeaves(dataTableConfiguration);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)
