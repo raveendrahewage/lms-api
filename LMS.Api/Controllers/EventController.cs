@@ -1,4 +1,5 @@
 ﻿using LMS.Services;
+using LMS.Services.Common;
 using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
@@ -64,11 +65,26 @@ namespace LMS.Api.Controllers
             }
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllEvents(int? page, int? size)
+        [Route("get-events")]
+        public async Task<IActionResult> GetAllEvents()
         {
             try
             {
-                var result = await _eventService.GetAllEvents(page, size);
+                var result = await _eventService.GetAllEvents();
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        [HttpPost]
+        [Route("get-events/ssr")]
+        public async Task<IActionResult> GetAllEventsSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var result = await _eventService.GetAllEventsSsr(dataTableConfiguration);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)

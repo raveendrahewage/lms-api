@@ -1,4 +1,5 @@
-﻿using LMS.Services.Responses;
+﻿using LMS.Services.Common;
+using LMS.Services.Responses;
 using LMS.Services.ViewModels;
 
 namespace LMS.Services.Interfaces
@@ -7,8 +8,9 @@ namespace LMS.Services.Interfaces
     {
         Task<EventViewModel> CreateEvent(EventViewModel model);
         Task<EventViewModel> DeleteEventById(int id);
-        Task<List<EventViewModel>> GetAllEvents(int? page, int? size);
-        Task<List<EventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate);
+        Task<List<EventViewModel>> GetAllEvents();
+        Task<DataTableResult<EventViewModel>> GetAllEventsSsr(DataTableConfiguration dataTableConfiguration);
+        Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate);
         Task<EventViewModel> GetEventById(int id);
         Task<EventViewModel> UpdateEvent(EventViewModel model);
     }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LMS.Data.Common;
+using LMS.Data.Enum;
 
 namespace LMS.Data.Models
 {
@@ -15,5 +16,6 @@ namespace LMS.Data.Models
         public string Description { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public EventStatus EventStatus { get; set; }
     }
 }

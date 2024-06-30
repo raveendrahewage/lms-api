@@ -38,12 +38,20 @@ namespace LMS.Services
         {
             try
             {
-                var leaveToBeCreated = _mapper.Map<Leave>(model);
-                leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
-                leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
-                var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
-                _appDbContext.SaveChanges();
-                return _mapper.Map<LeaveViewModel>(result.Entity);
+                var isConflictingLeavesAvailable = _appDbContext.Leaves.Any(x =>
+                    x.EmployeeId == _accountService.GetCurrentLoggedInUserId()
+                    && x.FromDate >= model.FromDate
+                    && x.ToDate <= model.ToDate);
+                if(!isConflictingLeavesAvailable)
+                {
+                    var leaveToBeCreated = _mapper.Map<Leave>(model);
+                    leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
+                    leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
+                    var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
+                    _appDbContext.SaveChanges();
+                    return _mapper.Map<LeaveViewModel>(result.Entity);
+                }
+                throw new Exception("Selected dates conflict");
             }
             catch (Exception)
             {
@@ -54,13 +62,55 @@ namespace LMS.Services
         {
             try
             {
-                var leave = await _appDbContext.Leaves
+                var leaveToBeUpdated = await _appDbContext.Leaves
+                    .Include(x => x.Employee)
+                    .Include(x => x.DateWiseLeaves)
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if (leave is not null)
+                if (leaveToBeUpdated is not null)
                 {
-                    var leaveToBeUpdated = _mapper.Map<LeaveViewModel, Leave>(model, leave);
-                    leaveToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    leaveToBeUpdated.ModifiedDate = DateTime.Now;
+                    var currentLoggedInUserId = _accountService.GetCurrentLoggedInUserId();
+                    if (leaveToBeUpdated.EmployeeId == currentLoggedInUserId)
+                    {
+                        switch (model.LeaveStatus)
+                        {
+                            case LeaveStatus.Pending:
+                                leaveToBeUpdated.LeaveTypeId = model.LeaveTypeId;
+                                leaveToBeUpdated.Reason = model.Reason;
+                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Pending;
+                                foreach (var dbDateWiseLeave in leaveToBeUpdated.DateWiseLeaves)
+                                {
+                                    var modelDateWiseLeave = model.DateWiseLeaves.First(x => x.Id == dbDateWiseLeave.Id);
+                                    dbDateWiseLeave.LeaveDayType = modelDateWiseLeave.LeaveDayType;
+                                    dbDateWiseLeave.LeaveHalfDayType = modelDateWiseLeave.LeaveHalfDayType;
+                                    dbDateWiseLeave.LeaveQuarterDayType = modelDateWiseLeave.LeaveQuarterDayType;
+                                    dbDateWiseLeave.ModifiedBy = currentLoggedInUserId;
+                                    dbDateWiseLeave.ModifiedDate = DateTime.Now;
+                                }
+                                break;
+                            case LeaveStatus.Canceled:
+                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Canceled;
+                                break;
+                        }
+                        leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
+                        leaveToBeUpdated.ModifiedDate = DateTime.Now;
+                    }
+                    else if (leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
+                    {
+                        switch (model.LeaveStatus)
+                        {
+                            case LeaveStatus.Approved:
+                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Approved;
+                                break;
+                            case LeaveStatus.Denied:
+                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Denied;
+                                leaveToBeUpdated.DeniedReason = model.DeniedReason;
+                                break;
+                        }
+                        leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
+                        leaveToBeUpdated.ModifiedDate = DateTime.Now;
+                    }
+                    else throw new Exception("You don't have permission to make changes.");
+                    
                     var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
                     return _mapper.Map<LeaveViewModel>(result.Entity);
@@ -164,7 +214,7 @@ namespace LMS.Services
                 throw;
             }
         }
-        public async Task<DataTableResult<LeaveViewModel>> GetAllLeaves(DataTableConfiguration dataTableConfiguration)
+        public async Task<DataTableResult<LeaveListItemViewModel>> GetAllLeavesSsr(DataTableConfiguration dataTableConfiguration)
         {
             try
             {
@@ -173,8 +223,8 @@ namespace LMS.Services
                             .ThenInclude(x => x.Supervisor)
                         .Include(x => x.LeaveType)
                         .ToListAsync();
-                var leaveViewModels = _mapper.Map<List<LeaveViewModel>>(leaves);
-                return DataTableResultHandler<LeaveViewModel>.ResultToSsr(leaveViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
+                var leaveViewModels = _mapper.Map<List<LeaveListItemViewModel>>(leaves);
+                return DataTableResultHandler<LeaveListItemViewModel>.ResultToSsr(leaveViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
             {

@@ -85,7 +85,7 @@ namespace LMS.Api.Controllers
         {
             try
             {
-                var result = await _leaveService.GetAllLeaves(dataTableConfiguration);
+                var result = await _leaveService.GetAllLeavesSsr(dataTableConfiguration);
                 return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
             }
             catch (Exception)

@@ -1,4 +1,5 @@
 ﻿using LMS.Services;
+using LMS.Services.Common;
 using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
@@ -61,7 +62,9 @@ namespace LMS.Api.Controllers
                 throw;
             }
         }
+
         [HttpGet]
+        [Route("get-leave-types")]
         public async Task<IActionResult> GetAllLeaveTypes()
         {
             try
@@ -74,6 +77,22 @@ namespace LMS.Api.Controllers
                 throw;
             }
         }
+
+        [HttpPost]
+        [Route("get-leave-types/ssr")]
+        public async Task<IActionResult> GetAllLeaveTypesSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var result = await _leaveTypeService.GetAllLeaveTypesSsr(dataTableConfiguration);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         [HttpGet]
         [Route("{id}")]
         public async Task<IActionResult> GetLeaveTypeById(int id)

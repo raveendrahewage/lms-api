@@ -16,6 +16,10 @@ using LMS.Data.Enum;
 using LMS.Services.Interfaces;
 using Azure;
 using System.Drawing;
+using LMS.Services.Common;
+using LMS.Services.Constants;
+using LMS.Services.Helpers;
+using System.Collections;
 
 namespace LMS.Services
 {
@@ -54,11 +58,15 @@ namespace LMS.Services
         {
             try
             {
-                var dbEvent = await _appDbContext.Events
+                var eventToBeUpdated = await _appDbContext.Events
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(dbEvent is not null)
+                if(eventToBeUpdated is not null)
                 {
-                    var eventToBeUpdated = _mapper.Map<EventViewModel, Event>(model, dbEvent);
+                    eventToBeUpdated.Title = model.Title;
+                    eventToBeUpdated.Description = model.Description;
+                    eventToBeUpdated.StartDate = model.StartDate;
+                    eventToBeUpdated.EndDate = model.EndDate;
+                    eventToBeUpdated.EventStatus = model.EventStatus;
                     eventToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                     eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     var result = _appDbContext.Events.Update(eventToBeUpdated);
@@ -72,37 +80,56 @@ namespace LMS.Services
                 throw;
             }
         }
-        public async Task<List<EventViewModel>> GetAllEvents(int? page, int? size)
-        {
-            try
-            {
-                List<Event> events = new List<Event>();
-                if (page.HasValue && size.HasValue && page > 0 && size > 0)
-                {
-                    events = await _appDbContext.Events
-                    .Skip((page.Value - 1) * size.Value)
-                    .Take(size.Value)
-                        .ToListAsync();
-                }
-                else
-                {
-                    events = await _appDbContext.Events.ToListAsync();
-                }
-                return _mapper.Map<List<EventViewModel>>(events);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-        public async Task<List<EventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate)
+        public async Task<List<EventViewModel>> GetAllEvents()
         {
             try
             {
                 var events = await _appDbContext.Events
-                    .Where(x => x.StartDate >= startDate && x.EndDate <= endDate)
                     .ToListAsync();
                 return _mapper.Map<List<EventViewModel>>(events);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<DataTableResult<EventViewModel>> GetAllEventsSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var events = await _appDbContext.Events
+                    .ToListAsync();
+                var eventViewModels = _mapper.Map<List<EventViewModel>>(events);
+                return DataTableResultHandler<EventViewModel>.ResultToSsr(eventViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var leaves = await _appDbContext.Leaves
+                    .Include(x => x.LeaveType)
+                    .Where(x =>
+                        //x.LeaveStatus == LeaveStatus.Approved
+                        //&& 
+                        x.FromDate >= startDate
+                        && x.ToDate <= endDate)
+                    .ToListAsync();
+                var leaveCalendarEvents = _mapper.Map<List<CalendarEventViewModel>>(leaves);
+                var events = await _appDbContext.Events
+                    .Where(x =>
+                        //x.EventStatus == EventStatus.Active
+                        //&&
+                        x.StartDate >= startDate
+                        && x.EndDate <= endDate)
+                    .ToListAsync();
+                var eventCalendarEvents = _mapper.Map<List<CalendarEventViewModel>>(events);
+                return leaveCalendarEvents.Concat(eventCalendarEvents).ToList();
             }
             catch (Exception)
             {

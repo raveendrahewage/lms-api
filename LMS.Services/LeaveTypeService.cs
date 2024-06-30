@@ -14,6 +14,9 @@ using LMS.Services.Responses;
 using Microsoft.EntityFrameworkCore;
 using LMS.Data.Enum;
 using LMS.Services.Interfaces;
+using LMS.Services.Common;
+using LMS.Services.Constants;
+using LMS.Services.Helpers;
 
 namespace LMS.Services
 {
@@ -52,11 +55,12 @@ namespace LMS.Services
         {
             try
             {
-                var leaveType = await _appDbContext.LeaveTypes
+                var leaveTypeToBeUpdated = await _appDbContext.LeaveTypes
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(leaveType is not null)
+                if(leaveTypeToBeUpdated is not null)
                 {
-                    var leaveTypeToBeUpdated = _mapper.Map<LeaveTypeViewModel, LeaveType>(model, leaveType);
+                    leaveTypeToBeUpdated.Name = model.Name;
+                    leaveTypeToBeUpdated.Status = model.Status;
                     leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                     leaveTypeToBeUpdated.ModifiedDate = DateTime.Now;
                     _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
@@ -77,6 +81,21 @@ namespace LMS.Services
                 var leaveTypes = await _appDbContext.LeaveTypes
                     .ToListAsync();
                 return _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<DataTableResult<LeaveTypeViewModel>> GetAllLeaveTypesSsr(DataTableConfiguration dataTableConfiguration)
+        {
+            try
+            {
+                var leaveTypes = await _appDbContext.LeaveTypes
+                    .ToListAsync();
+                var leaveTypeViewModels = _mapper.Map<List<LeaveTypeViewModel>>(leaveTypes);
+                return DataTableResultHandler<LeaveTypeViewModel>.ResultToSsr(leaveTypeViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
             {
