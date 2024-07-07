@@ -121,5 +121,19 @@ namespace LMS.Api.Controllers
                 throw;
             }
         }
+        [HttpGet]
+        [Route("generate-leave-report")]
+        public async Task<IActionResult> GenerateLeaveReport()
+        {
+            try
+            {
+                var result = await _leaveService.GenerateLeaveReport();
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

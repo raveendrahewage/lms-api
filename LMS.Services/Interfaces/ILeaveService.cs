@@ -15,5 +15,6 @@ namespace LMS.Services.Interfaces
         Task<List<LeaveViewModel>> GetLeavesBetween(DateTime startDate, DateTime endDate);
         Task<LeaveViewModel> DeleteLeaveById(int id);
         Task<DataTableResult<LeaveListItemViewModel>> GetAllLeavesSsr(DataTableConfiguration dataTableConfiguration);
+        Task<List<LeaveReportViewModel>> GenerateLeaveReport();
     }
 }

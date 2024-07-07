@@ -52,15 +52,7 @@ namespace LMS.Services.Mappings
 
             CreateMap<Event, CalendarEventViewModel>()
                 .ForMember(d => d.CalendarEventType, opt => opt.MapFrom(s => CalendarEventType.Event))
-                .ForMember(d => d.Event, opt => opt.MapFrom(s => s))
                 .ForMember(d => d.CalendarEventId, opt => opt.MapFrom(s => s.Id));
-            CreateMap<Leave, CalendarEventViewModel>()
-                .ForMember(d => d.Leave, opt => opt.MapFrom(s => s))
-                .ForMember(d => d.CalendarEventType, opt => opt.MapFrom(s => CalendarEventType.Leave))
-                .ForMember(d => d.CalendarEventId, opt => opt.MapFrom(s => s.Id))
-                .ForMember(d => d.Title, opt => opt.MapFrom(s => s.LeaveType.Name))
-                .ForMember(d => d.StartDate, opt => opt.MapFrom(s => s.FromDate))
-                .ForMember(d => d.EndDate, opt => opt.MapFrom(s => s.ToDate));
         }
     }
 }

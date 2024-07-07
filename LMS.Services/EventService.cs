@@ -112,24 +112,41 @@ namespace LMS.Services
         {
             try
             {
+                var calendarEvents = new List<CalendarEventViewModel>();
                 var leaves = await _appDbContext.Leaves
                     .Include(x => x.LeaveType)
+                    .Include(x => x.DateWiseLeaves)
+                    .Include(x => x.Employee)
                     .Where(x =>
                         //x.LeaveStatus == LeaveStatus.Approved
                         //&& 
-                        x.FromDate >= startDate
-                        && x.ToDate <= endDate)
+                        (x.FromDate >= startDate || x.ToDate <= endDate)
+                        || (x.FromDate <= startDate && x.ToDate >= endDate))
                     .ToListAsync();
-                var leaveCalendarEvents = _mapper.Map<List<CalendarEventViewModel>>(leaves);
+                foreach (var leave in leaves)
+                {
+                    foreach (var dateWiseLeave in leave.DateWiseLeaves)
+                    {
+                        var calendarEvent = new CalendarEventViewModel
+                        {
+                            CalendarEventId = leave.Id,
+                            CalendarEventType = CalendarEventType.Leave,
+                            StartDate = dateWiseLeave.Date,
+                            EndDate = dateWiseLeave.Date,
+                            Title = $"{leave.Employee.FullName}: {dateWiseLeave.Title}"
+                        };
+                        calendarEvents.Add(calendarEvent);
+                    }
+                }
                 var events = await _appDbContext.Events
                     .Where(x =>
                         //x.EventStatus == EventStatus.Active
                         //&&
-                        x.StartDate >= startDate
-                        && x.EndDate <= endDate)
+                        (x.StartDate >= startDate || x.EndDate <= endDate)
+                        || (x.StartDate <= startDate && x.EndDate >= endDate))
                     .ToListAsync();
                 var eventCalendarEvents = _mapper.Map<List<CalendarEventViewModel>>(events);
-                return leaveCalendarEvents.Concat(eventCalendarEvents).ToList();
+                return calendarEvents.Concat(eventCalendarEvents).ToList();
             }
             catch (Exception)
             {

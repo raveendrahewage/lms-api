@@ -46,7 +46,7 @@ namespace LMS.Services
                 var result = await _appDbContext.LeaveTypes.AddAsync(leaveTypeToBeCreated);
                 _appDbContext.SaveChanges();
                 return model;
-            } catch ( Exception ex )
+            } catch (Exception)
             {
                 throw;
             }

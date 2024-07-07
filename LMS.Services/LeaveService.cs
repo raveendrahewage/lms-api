@@ -126,7 +126,7 @@ namespace LMS.Services
                 var databaseValues = (Leave)databaseEntry.ToObject();
                 throw new Exception($"Leave is {Enum.GetName(typeof(LeaveStatus), databaseValues.LeaveStatus)}.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -209,7 +209,7 @@ namespace LMS.Services
                 }
                 throw new Exception("Leave not found!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -266,6 +266,29 @@ namespace LMS.Services
             {
                 throw;
             }
+        }
+
+        public async Task<List<LeaveReportViewModel>> GenerateLeaveReport()
+        {
+            var oneYearAgo = DateTime.Today.AddYears(-1);
+
+            var query = from lr in _appDbContext.Leaves
+                        join e in _appDbContext.SystemUsers on lr.EmployeeId equals e.Id
+                        join lt in _appDbContext.LeaveTypes on lr.LeaveTypeId equals lt.Id
+                        where lr.FromDate >= oneYearAgo || lr.ToDate >= oneYearAgo
+                        group lr by new { lt.Name, lr.LeaveTypeId, lr.FromDate.Month, lr.LeaveStatus } into g
+                        orderby g.Key.Month
+                        select new LeaveReportViewModel
+                        {
+                            Count = g.Count(),
+                            LeaveTypeId = g.Key.LeaveTypeId,
+                            LeaveTypeName = g.Key.Name,
+                            Month = g.Key.Month,
+                            LeaveStatus = g.Key.LeaveStatus,
+                            LeaveStatusName = g.Key.LeaveStatus.GetDescription()
+                        };
+
+            return await query.ToListAsync();
         }
     }
 }

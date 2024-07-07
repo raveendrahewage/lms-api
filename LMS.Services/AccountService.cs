@@ -209,11 +209,11 @@ namespace LMS.Services
                 List<Claim> claims =
                 [
                     new Claim(AuthClaim.SysUserUsername, systemUser.Email),
-                new Claim(AuthClaim.SysUserUserId, systemUser.Id.ToString()),
-                new Claim(AuthClaim.SysUserRole, systemUser.Role.Name),
-                new Claim(AuthClaim.SysUserRoleId, systemUser.Role.Id.ToString()),
-                new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
-                new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
+                    new Claim(AuthClaim.SysUserUserId, systemUser.Id.ToString()),
+                    new Claim(AuthClaim.SysUserRole, systemUser.Role.Name),
+                    new Claim(AuthClaim.SysUserRoleId, systemUser.Role.Id.ToString()),
+                    new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
+                    new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
                 ];
 
                 var tokenDescriptor = new SecurityTokenDescriptor
