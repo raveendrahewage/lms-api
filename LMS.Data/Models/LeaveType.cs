@@ -12,6 +12,8 @@ namespace LMS.Data.Models
     {
         [Column(TypeName = "nvarchar(150)")]
         public string Name { get; set; } = string.Empty;
+        public int DefaultLeaveCount { get; set; } = 0;
         public virtual List<Leave> Leaves { get; } = [];
+        public virtual List<LeaveAvailability> LeaveAvailabilities { get; } = [];
     }
 }

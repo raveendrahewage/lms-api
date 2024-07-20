@@ -1,6 +1,6 @@
-﻿using LMS.Services;
+﻿using LMS.Api.Helpers.Interfaces;
+using LMS.Services;
 using LMS.Services.Common;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -13,15 +13,11 @@ namespace LMS.Api.Controllers
     [Authorize]
     [Route("api/leave-type")]
     [ApiController]
-    public class LeaveTypeController : ControllerBase
+    public class LeaveTypeController(ILeaveTypeService leaveTypeService, IApiResponseHelper apiResponseHelper) : ControllerBase
     {
-        private readonly ILeaveTypeService _leaveTypeService;
-        private readonly IApiResponseHelper _apiResponseHelper;
-        public LeaveTypeController(ILeaveTypeService leaveTypeService, IApiResponseHelper apiResponseHelper)
-        {
-            _leaveTypeService = leaveTypeService;
-            _apiResponseHelper = apiResponseHelper;
-        }
+        private readonly ILeaveTypeService _leaveTypeService = leaveTypeService;
+        private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
+
         [HttpPost]
         public async Task<IActionResult> CreateNewLeaveType(LeaveTypeViewModel model)
         {

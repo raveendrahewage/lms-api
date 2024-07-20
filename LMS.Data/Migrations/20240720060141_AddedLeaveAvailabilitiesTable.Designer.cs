@@ -4,6 +4,7 @@ using LMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LMS.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240720060141_AddedLeaveAvailabilitiesTable")]
+    partial class AddedLeaveAvailabilitiesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -271,9 +274,6 @@ namespace LMS.Data.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DefaultLeaveCount")
-                        .HasColumnType("int");
-
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
@@ -354,7 +354,7 @@ namespace LMS.Data.Migrations
                             Id = 1,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 7, 20, 11, 10, 12, 833, DateTimeKind.Utc).AddTicks(4335),
+                            CreatedDate = new DateTime(2024, 7, 20, 11, 31, 39, 600, DateTimeKind.Local).AddTicks(4043),
                             Name = "Admin",
                             NormalizedName = "ADMIN",
                             Status = 1
@@ -364,7 +364,7 @@ namespace LMS.Data.Migrations
                             Id = 2,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 7, 20, 11, 10, 12, 833, DateTimeKind.Utc).AddTicks(4341),
+                            CreatedDate = new DateTime(2024, 7, 20, 11, 31, 39, 600, DateTimeKind.Local).AddTicks(4065),
                             Name = "User",
                             NormalizedName = "USER",
                             Status = 1
@@ -490,7 +490,7 @@ namespace LMS.Data.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "initial",
                             CreatedBy = 0,
-                            CreatedDate = new DateTime(2024, 7, 20, 11, 10, 12, 833, DateTimeKind.Utc).AddTicks(5618),
+                            CreatedDate = new DateTime(2024, 7, 20, 11, 31, 39, 600, DateTimeKind.Local).AddTicks(5804),
                             Email = "superadmin@lms.com",
                             EmailConfirmed = true,
                             FirstName = "Super",

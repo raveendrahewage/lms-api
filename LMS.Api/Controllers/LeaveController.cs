@@ -1,7 +1,7 @@
-﻿using LMS.Services;
+﻿using LMS.Api.Helpers.Interfaces;
+using LMS.Services;
 using LMS.Services.Common;
 using LMS.Services.Constants;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -9,22 +9,16 @@ using Microsoft.AspNetCore.Mvc;
 using System.Drawing;
 using System.Security.Policy;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace LMS.Api.Controllers
 {
     [Authorize]
     [Route("api/leave")]
     [ApiController]
-    public class LeaveController : ControllerBase
+    public class LeaveController(ILeaveService leaveService, IApiResponseHelper apiResponseHelper) : ControllerBase
     {
-        private readonly ILeaveService _leaveService;
-        private readonly IApiResponseHelper _apiResponseHelper;
-        public LeaveController(ILeaveService leaveService, IApiResponseHelper apiResponseHelper)
-        {
-            _leaveService = leaveService;
-            _apiResponseHelper = apiResponseHelper;
-        }
+        private readonly ILeaveService _leaveService = leaveService;
+        private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
+
         [HttpPost]
         public async Task<IActionResult> CreateNewLeave(LeaveViewModel model)
         {
@@ -109,7 +103,7 @@ namespace LMS.Api.Controllers
         }
         [HttpGet]
         [Route("get-leaves-between")]
-        public async Task<IActionResult> GetLeavesBetween(DateTime startDate, DateTime endDate)
+        public async Task<IActionResult> GetLeavesBetween(DateOnly startDate, DateOnly endDate)
         {
             try
             {

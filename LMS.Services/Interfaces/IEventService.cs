@@ -10,7 +10,7 @@ namespace LMS.Services.Interfaces
         Task<EventViewModel> DeleteEventById(int id);
         Task<List<EventViewModel>> GetAllEvents();
         Task<DataTableResult<EventViewModel>> GetAllEventsSsr(DataTableConfiguration dataTableConfiguration);
-        Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate);
+        Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateOnly startDate, DateOnly endDate);
         Task<EventViewModel> GetEventById(int id);
         Task<EventViewModel> UpdateEvent(EventViewModel model);
     }

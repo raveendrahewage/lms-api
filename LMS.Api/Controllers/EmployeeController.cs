@@ -1,7 +1,7 @@
-﻿using LMS.Data.Enum;
+﻿using LMS.Api.Helpers.Interfaces;
+using LMS.Data.Enum;
 using LMS.Services.Common;
 using LMS.Services.Constants;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -10,23 +10,15 @@ using System.Drawing;
 using System.Security.Claims;
 using System.Security.Policy;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace LMS.Api.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class EmployeeController : ControllerBase
+    public class EmployeeController(IEmployeeService employeeService, IApiResponseHelper apiResponseHelper) : ControllerBase
     {
-        private readonly IEmployeeService _employeeService;
-        private readonly IApiResponseHelper _apiResponseHelper;
-
-        public EmployeeController(IEmployeeService employeeService, IApiResponseHelper apiResponseHelper)
-        {
-            _employeeService = employeeService;
-            _apiResponseHelper = apiResponseHelper;
-        }
+        private readonly IEmployeeService _employeeService = employeeService;
+        private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
 
         [HttpGet]
         [Route("get-employees")]

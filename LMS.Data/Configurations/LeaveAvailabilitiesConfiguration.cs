@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ACIS.Data.Configurations
 {
-    public class LeaveTypesConfiguration : IEntityTypeConfiguration<LeaveType>
+    public class LeaveAvailabilitiesConfiguration : IEntityTypeConfiguration<LeaveAvailability>
     {
-        public void Configure(EntityTypeBuilder<LeaveType> builder)
+        public void Configure(EntityTypeBuilder<LeaveAvailability> builder)
         {
-            builder.HasMany(u => u.Leaves)
-                .WithOne(r => r.LeaveType)
-                .HasForeignKey(u => u.LeaveTypeId)
+            builder.HasOne(u => u.SystemUser)
+                .WithMany(r => r.LeaveAvailabilities)
+                .HasForeignKey(u => u.SystemUserId)
                 .OnDelete(DeleteBehavior.NoAction);
-            builder.HasMany(u => u.LeaveAvailabilities)
-                .WithOne(r => r.LeaveType)
+            builder.HasOne(u => u.LeaveType)
+                .WithMany(r => r.LeaveAvailabilities)
                 .HasForeignKey(u => u.LeaveTypeId)
                 .OnDelete(DeleteBehavior.NoAction);
             builder.HasQueryFilter(x => x.Status == DataRecordStatus.Active);

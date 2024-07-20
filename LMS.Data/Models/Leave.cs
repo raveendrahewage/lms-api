@@ -16,8 +16,8 @@ namespace LMS.Data.Models
         public int EmployeeId { get; set; }
         [ForeignKey(nameof(LeaveType))]
         public int LeaveTypeId { get; set; }
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
+        public DateOnly FromDate { get; set; }
+        public DateOnly ToDate { get; set; }
         [Column(TypeName = "nvarchar(max)")]
         public string Reason { get; set; } = string.Empty;
         public LeaveStatus LeaveStatus { get; set; } = LeaveStatus.Pending;

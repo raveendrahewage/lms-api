@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-public static class EnumExtensions
+namespace LMS.Data.Extensions
 {
-    public static string GetDescription(this Enum value)
+    public static class EnumExtensions
     {
-        FieldInfo fi = value.GetType().GetField(value.ToString());
-
-        if (fi != null)
+        public static string GetDescription(this System.Enum value)
         {
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+            FieldInfo fi = value.GetType().GetField(value.ToString());
 
-            if (attributes.Length > 0)
+            if (fi != null)
             {
-                return attributes[0].Description;
-            }
-        }
+                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
 
-        return value.ToString();
+                if (attributes.Length > 0)
+                {
+                    return attributes[0].Description;
+                }
+            }
+
+            return value.ToString();
+        }
     }
 }

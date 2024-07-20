@@ -1,5 +1,6 @@
 ﻿using LMS.Data.Common;
 using LMS.Data.Enum;
+using LMS.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,12 +15,12 @@ namespace LMS.Data.Models
     {
         [ForeignKey(nameof(Leave))]
         public int LeaveId { get; set; }
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
         public LeaveDayType LeaveDayType { get; set; } = LeaveDayType.FullDay;
         public LeaveHalfDayType? LeaveHalfDayType { get; set; }
         public LeaveQuarterDayType? LeaveQuarterDayType { get; set; }
         [Timestamp]
-        public byte[] Version { get; set; }
+        public byte[] Version { get; set; } = [];
 
         public virtual Leave Leave { get; set; }
 

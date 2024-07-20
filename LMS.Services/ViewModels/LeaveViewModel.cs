@@ -1,6 +1,8 @@
 ﻿using LMS.Data.Common;
 using LMS.Data.Enum;
 using LMS.Data.Models;
+using LMS.Services.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,8 +17,10 @@ namespace LMS.Services.ViewModels
     {
         public int EmployeeId { get; set; }
         public int LeaveTypeId { get; set; }
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly FromDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly ToDate { get; set; }
         public string Reason { get; set; } = string.Empty;
         public LeaveStatus LeaveStatus { get; set; } = LeaveStatus.Pending;
         public bool IsApproved { get; set; }

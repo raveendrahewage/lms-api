@@ -12,18 +12,15 @@ using System.Threading.Tasks;
 
 namespace LMS.Data
 {
-    public class ApplicationDbContext: IdentityDbContext<SystemUser, SystemRole, int>
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<SystemUser, SystemRole, int>(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-
-        }
         public DbSet<SystemRole> SystemRoles { get; set; }
         public DbSet<SystemUser> SystemUsers { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<DateWiseLeave> DateWiseLeaves { get; set; }
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Event> Events { get; set; }
+        public DbSet<LeaveAvailability> LeaveAvailabilities { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

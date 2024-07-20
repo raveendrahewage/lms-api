@@ -7,8 +7,8 @@ using LMS.Data.Models;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -22,34 +22,21 @@ using System.Threading.Tasks;
 
 namespace LMS.Services
 {
-    public class AccountService: IAccountService
+    public class AccountService(
+        ApplicationDbContext appDbContext,
+        SignInManager<SystemUser> signInManager,
+        UserManager<SystemUser> userManager,
+        IConfiguration configuration,
+        IMapper mapper,
+        IHttpContextAccessor httpContextAccessor
+        ) : IAccountService
     {
-        private readonly ApplicationDbContext _appDbContext;
-        private readonly RoleManager<SystemRole> _roleManager;
-        private readonly SignInManager<SystemUser> _signInManager;
-        private readonly UserManager<SystemUser> _userManager;
-        private readonly IConfiguration _configuration;
-        private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public AccountService(
-            ApplicationDbContext appDbContext,
-            RoleManager<SystemRole> roleManager,
-            SignInManager<SystemUser> signInManager,
-            UserManager<SystemUser> userManager,
-            IConfiguration configuration,
-            IMapper mapper,
-            IHttpContextAccessor httpContextAccessor
-        )
-        {
-            _appDbContext = appDbContext;
-            _roleManager = roleManager;
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _configuration = configuration;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        private readonly ApplicationDbContext _appDbContext = appDbContext;
+        private readonly SignInManager<SystemUser> _signInManager = signInManager;
+        private readonly UserManager<SystemUser> _userManager = userManager;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IMapper _mapper = mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
         public async Task<AuthResult> SignIn(SignInViewModel model)
         {
@@ -63,14 +50,14 @@ namespace LMS.Services
                     {
                         var systemUser = await _appDbContext.SystemUsers
                             .Include(x => x.Role)
-                            .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
-                        var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
+                            .FirstAsync(x => x.Id == sysUser.Id);
+                        var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                         var token = GenerateToken(systemUser);
                         return new AuthResult(
-                                new JwtSecurityTokenHandler().WriteToken(token),
-                                token.ValidTo,
-                                systemUserViewModel
-                            );
+                            new JwtSecurityTokenHandler().WriteToken(token),
+                            token.ValidTo,
+                            systemUserViewModel
+                        );
                     }
                 }
                 throw new Exception("Signed in failed! Incorrect username or password.");
@@ -92,14 +79,14 @@ namespace LMS.Services
                     {
                         var systemUser = await _appDbContext.SystemUsers
                             .Include(x => x.Role)
-                            .FirstOrDefaultAsync(x => x.Id == sysUser.Id);
-                        var systemUserViewModel = _mapper.Map<SystemUserViewModel>(systemUser);
+                            .FirstAsync(x => x.Id == sysUser.Id);
+                        var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                         var token = GenerateToken(systemUser);
                         return new AuthResult(
-                                new JwtSecurityTokenHandler().WriteToken(token),
-                                token.ValidTo,
-                                systemUserViewModel
-                            );
+                            new JwtSecurityTokenHandler().WriteToken(token),
+                            token.ValidTo,
+                            systemUserViewModel
+                        );
                     }
                 }
                 throw new Exception("Signed up failed! Incorrect username or password.");
@@ -163,7 +150,7 @@ namespace LMS.Services
                         .Include(x => x.ReviewedLeaves)
                         .Include(x => x.EmployeesUnderSupervision)
                         .FirstOrDefaultAsync(x => x.Id == loggedInSystemUser.Id);
-                    return _mapper.Map<SystemUserViewModel>(loggedInSystemUser);
+                    return _mapper.Map<SystemUser, SystemUserViewModel>(loggedInSystemUser);
                 }
                 throw new Exception("System user not found!");
             }
@@ -208,9 +195,9 @@ namespace LMS.Services
                 var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JWTSetting").GetSection("SecurityKey").Value!);
                 List<Claim> claims =
                 [
-                    new Claim(AuthClaim.SysUserUsername, systemUser.Email),
+                    new Claim(AuthClaim.SysUserUsername, systemUser.Email ?? string.Empty),
                     new Claim(AuthClaim.SysUserUserId, systemUser.Id.ToString()),
-                    new Claim(AuthClaim.SysUserRole, systemUser.Role.Name),
+                    new Claim(AuthClaim.SysUserRole, systemUser.Role.Name ?? string.Empty),
                     new Claim(AuthClaim.SysUserRoleId, systemUser.Role.Id.ToString()),
                     new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
                     new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
@@ -232,14 +219,7 @@ namespace LMS.Services
                 throw new Exception(ex.Message, ex);
             }
         }
-        public string GetCurrentLoggedInUsername()
-        {
-            return _httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaim.SysUserUsername)
-                .Value;
-        }
-        public int GetCurrentLoggedInUserId()
-        {
-            return Convert.ToInt32(_httpContextAccessor.HttpContext.User.Claims.First(x => x.Type == AuthClaim.SysUserUserId).Value);
-        }
+        public string GetCurrentLoggedInUsername() => _httpContextAccessor?.HttpContext?.User?.Claims?.FirstOrDefault(x => x.Type == AuthClaim.SysUserUsername)?.Value ?? string.Empty;
+        public int GetCurrentLoggedInUserId() => Convert.ToInt32(_httpContextAccessor?.HttpContext?.User?.Claims?.FirstOrDefault(x => x.Type == AuthClaim.SysUserUserId)?.Value ?? "0");
     }
 }

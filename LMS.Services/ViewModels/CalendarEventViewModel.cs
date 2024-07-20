@@ -1,5 +1,7 @@
 ﻿using LMS.Data.Enum;
 using LMS.Data.Models;
+using LMS.Services.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +15,9 @@ namespace LMS.Services.ViewModels
         public int CalendarEventId { get; set; }
         public string Title { get; set; } = string.Empty;
         public CalendarEventType CalendarEventType { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly StartDate { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly EndDate { get; set; }
     }
 }

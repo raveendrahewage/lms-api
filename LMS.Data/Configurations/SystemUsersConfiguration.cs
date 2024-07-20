@@ -42,6 +42,10 @@ namespace ACIS.Data.Configurations
                 .WithOne(r => r.Employee)
                 .HasForeignKey(u => u.EmployeeId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.HasMany(u => u.LeaveAvailabilities)
+                .WithOne(r => r.SystemUser)
+                .HasForeignKey(u => u.SystemUserId)
+                .OnDelete(DeleteBehavior.NoAction);
             builder.HasMany(u => u.ReviewedLeaves)
                 .WithOne(r => r.Reviewer)
                 .HasForeignKey(u => u.ReviewedBy)

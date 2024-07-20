@@ -12,6 +12,7 @@ namespace LMS.Services.ViewModels
     public class LeaveTypeViewModel : DataRecordViewModel
     {
         public string Name { get; set; } = string.Empty;
+        public int DefaultLeaveCount { get; set; } = 0;
         public virtual List<LeaveViewModel> Leaves { get; } = [];
     }
 }

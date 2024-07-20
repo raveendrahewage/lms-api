@@ -8,7 +8,6 @@ using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,31 +21,17 @@ using System.Threading.Tasks;
 
 namespace LMS.Services
 {
-    public class EmployeeService : IEmployeeService
+    public class EmployeeService(
+        ApplicationDbContext appDbContext,
+        UserManager<SystemUser> userManager,
+        IMapper mapper,
+        IAccountService accountService
+        ) : IEmployeeService
     {
-        private readonly ApplicationDbContext _appDbContext;
-        private readonly RoleManager<SystemRole> _roleManager;
-        private readonly SignInManager<SystemUser> _signInManager;
-        private readonly UserManager<SystemUser> _userManager;
-        private readonly IMapper _mapper;
-        private readonly IAccountService _accountService;
-
-        public EmployeeService(
-            ApplicationDbContext appDbContext,
-            RoleManager<SystemRole> roleManager,
-            SignInManager<SystemUser> signInManager,
-            UserManager<SystemUser> userManager,
-            IMapper mapper,
-            IAccountService accountService
-        )
-        {
-            _appDbContext = appDbContext;
-            _roleManager = roleManager;
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _mapper = mapper;
-            _accountService = accountService;
-        }
+        private readonly ApplicationDbContext _appDbContext = appDbContext;
+        private readonly UserManager<SystemUser> _userManager = userManager;
+        private readonly IMapper _mapper = mapper;
+        private readonly IAccountService _accountService = accountService;
 
         public async Task<List<SystemUserViewModel>> GetAllEmployees()
         {
@@ -59,7 +44,7 @@ namespace LMS.Services
                         .Include(x => x.Supervisor)
                         .Include(x => x.EmployeesUnderSupervision)
                         .ToListAsync();
-                return _mapper.Map<List<SystemUserViewModel>>(systemUsers);
+                return _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUsers);
             }
             catch (Exception)
             {
@@ -77,7 +62,7 @@ namespace LMS.Services
                         .Include(x => x.Supervisor)
                         .Where(x => x.Status == DataRecordStatus.Active || x.Status == DataRecordStatus.Inactive)
                         .ToListAsync();
-                var systemUserListItemViewModels = _mapper.Map<List<SystemUserListItemViewModel>>(systemUsers);
+                var systemUserListItemViewModels = _mapper.Map<List<SystemUser>, List<SystemUserListItemViewModel>>(systemUsers);
                 return DataTableResultHandler<SystemUserListItemViewModel>.ResultToSsr(systemUserListItemViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
@@ -95,10 +80,11 @@ namespace LMS.Services
                     .Include(x => x.Supervisor) 
                     .Include(x => x.ReviewedLeaves)
                     .Include(x => x.EmployeesUnderSupervision)
+                    .Include(x => x.LeaveAvailabilities.Where(x => x.Year == DateTime.UtcNow.Year))
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(systemUser is not null)
                 {
-                    return _mapper.Map<SystemUserViewModel>(systemUser);
+                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                 }
                 throw new Exception("Employee not found!");
             }
@@ -120,7 +106,7 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => (x.FirstName.ToLower().Trim() + " " + x.LastName.ToLower().Trim()).Equals(fullName.Trim().ToLower()));
                 if(systemUser is not null)
                 {
-                    return _mapper.Map<SystemUserViewModel>(systemUser);
+                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                 }
                 throw new Exception("Employee not found!");
             }
@@ -137,7 +123,7 @@ namespace LMS.Services
                 if (signUpResult)
                 {
                     var systemUser = await _userManager.FindByEmailAsync(model.Email);
-                    return _mapper.Map<SystemUserViewModel>(systemUser);
+                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                 }
                 throw new Exception("Employee was not created! Something went wrong.");
             }
@@ -183,12 +169,12 @@ namespace LMS.Services
                     systemUser.SupervisorId = model.SupervisorId;
                     systemUser.Status = model.Status;
                     systemUser.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    systemUser.ModifiedDate = DateTime.Now;
+                    systemUser.ModifiedDate = DateTime.UtcNow;
                     var result = await _userManager.UpdateAsync(systemUser);
                     if (result.Succeeded)
                     {
                         await _appDbContext.SaveChangesAsync();
-                        return _mapper.Map<SystemUserViewModel>(systemUser);
+                        return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                     }
                     throw new Exception("Updating failed!. Something went wrong.");
                 }
@@ -209,7 +195,7 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(systemUser is not null)
                 {
-                    return _mapper.Map<List<SystemUserViewModel>>(systemUser?.EmployeesUnderSupervision);
+                    return _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUser?.EmployeesUnderSupervision);
                 }
                 throw new Exception("Employee not found!");
             }
@@ -228,10 +214,10 @@ namespace LMS.Services
                 {
                     employee.Status = DataRecordStatus.Deleted;
                     employee.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    employee.DeletedDate = DateTime.Now;
+                    employee.DeletedDate = DateTime.UtcNow;
                     _appDbContext.SystemUsers.Update(employee);
                     await _appDbContext.SaveChangesAsync();
-                   return _mapper.Map<SystemUserViewModel>(employee);
+                   return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
                 }
                 throw new Exception("Employee not found!");
             }
@@ -250,10 +236,10 @@ namespace LMS.Services
                 {
                     employee.Status = DataRecordStatus.Inactive;
                     employee.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    employee.ModifiedDate = DateTime.Now;
+                    employee.ModifiedDate = DateTime.UtcNow;
                     _appDbContext.SystemUsers.Update(employee);
                     await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<SystemUserViewModel>(employee);
+                    return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
                 }
                 throw new Exception("Employee not found!");
             }

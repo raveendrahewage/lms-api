@@ -1,6 +1,8 @@
 ﻿using LMS.Data.Common;
 using LMS.Data.Enum;
 using LMS.Data.Models;
+using LMS.Services.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +14,8 @@ namespace LMS.Services.ViewModels
     public class DateWiseLeaveViewModel:DataRecordViewModel
     {
         public int LeaveId { get; set; }
-        public DateTime Date { get; set; }
+        [JsonConverter(typeof(DateOnlyJsonConverter))]
+        public DateOnly Date { get; set; }
         public LeaveDayType LeaveDayType { get; set; } = LeaveDayType.FullDay;
         public LeaveHalfDayType? LeaveHalfDayType { get; set; }
         public LeaveQuarterDayType? LeaveQuarterDayType { get; set; }

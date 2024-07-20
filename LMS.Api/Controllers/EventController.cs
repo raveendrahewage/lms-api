@@ -1,6 +1,6 @@
-﻿using LMS.Services;
+﻿using LMS.Api.Helpers.Interfaces;
+using LMS.Services;
 using LMS.Services.Common;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -15,15 +15,11 @@ namespace LMS.Api.Controllers
     [Authorize]
     [Route("api/event")]
     [ApiController]
-    public class EventController : ControllerBase
+    public class EventController(IEventService eventService, IApiResponseHelper apiResponseHelper) : ControllerBase
     {
-        private readonly IEventService _eventService;
-        private readonly IApiResponseHelper _apiResponseHelper;
-        public EventController(IEventService eventService, IApiResponseHelper apiResponseHelper)
-        {
-            _eventService = eventService;
-            _apiResponseHelper = apiResponseHelper;
-        }
+        private readonly IEventService _eventService = eventService;
+        private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
+
         [HttpPost]
         public async Task<IActionResult> CreateNewEvent(EventViewModel model)
         {
@@ -108,7 +104,7 @@ namespace LMS.Api.Controllers
         }
         [HttpGet]
         [Route("get-events-between")]
-        public async Task<IActionResult> GetEventsBetweenDate(DateTime startDate, DateTime endDate)
+        public async Task<IActionResult> GetEventsBetweenDate(DateOnly startDate, DateOnly endDate)
         {
             try
             {

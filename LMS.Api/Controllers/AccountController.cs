@@ -1,29 +1,22 @@
-﻿using LMS.Api.ViewModels;
+﻿using LMS.Api.Helpers.Interfaces;
+using LMS.Api.ViewModels;
 using LMS.Data.Enum;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace LMS.Api.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountController(IAccountService accountService, IApiResponseHelper apiResponseHelper) : ControllerBase
     {
-        private readonly IAccountService _accountService;
-        private readonly IApiResponseHelper _apiResponseHelper;
-        public AccountController(IAccountService accountService, IApiResponseHelper apiResponseHelper) {
-            _accountService = accountService;
-            _apiResponseHelper = apiResponseHelper;
-        }
+        private readonly IAccountService _accountService = accountService;
+        private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
 
         [HttpPost]
         [AllowAnonymous]

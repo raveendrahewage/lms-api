@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using LMS.Data.Models;
 using LMS.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -23,28 +22,21 @@ using System.Collections;
 
 namespace LMS.Services
 {
-    public class EventService: IEventService
+    public class EventService(
+        ApplicationDbContext appDbContext,
+        IMapper mapper,
+        IAccountService accountService
+        ) : IEventService
     {
-        private readonly ApplicationDbContext _appDbContext;
-        private readonly IMapper _mapper;
-        private readonly IAccountService _accountService;
+        private readonly ApplicationDbContext _appDbContext = appDbContext;
+        private readonly IMapper _mapper = mapper;
+        private readonly IAccountService _accountService = accountService;
 
-        public EventService(
-            ApplicationDbContext appDbContext,
-            IMapper mapper,
-            IAccountService accountService
-        )
-        {
-            _appDbContext = appDbContext;
-            _mapper = mapper;
-            _accountService = accountService;
-        }
-        
         public async Task<EventViewModel> CreateEvent(EventViewModel model)
         {
             try
             {
-                var eventToBeCreated = _mapper.Map<Event>(model);
+                var eventToBeCreated = _mapper.Map<EventViewModel, Event>(model);
                 eventToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 var result = await _appDbContext.Events.AddAsync(eventToBeCreated);
                 await _appDbContext.SaveChangesAsync();
@@ -86,7 +78,7 @@ namespace LMS.Services
             {
                 var events = await _appDbContext.Events
                     .ToListAsync();
-                return _mapper.Map<List<EventViewModel>>(events);
+                return _mapper.Map<List<Event>, List<EventViewModel>>(events);
             }
             catch (Exception)
             {
@@ -100,7 +92,7 @@ namespace LMS.Services
             {
                 var events = await _appDbContext.Events
                     .ToListAsync();
-                var eventViewModels = _mapper.Map<List<EventViewModel>>(events);
+                var eventViewModels = _mapper.Map<List<Event>, List<EventViewModel>>(events);
                 return DataTableResultHandler<EventViewModel>.ResultToSsr(eventViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
@@ -108,7 +100,7 @@ namespace LMS.Services
                 throw;
             }
         }
-        public async Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateTime startDate, DateTime endDate)
+        public async Task<List<CalendarEventViewModel>> GetLeaveAndEventsBetween(DateOnly startDate, DateOnly endDate)
         {
             try
             {
@@ -145,8 +137,8 @@ namespace LMS.Services
                         (x.StartDate >= startDate || x.EndDate <= endDate)
                         || (x.StartDate <= startDate && x.EndDate >= endDate))
                     .ToListAsync();
-                var eventCalendarEvents = _mapper.Map<List<CalendarEventViewModel>>(events);
-                return calendarEvents.Concat(eventCalendarEvents).ToList();
+                var eventCalendarEvents = _mapper.Map<List<Event>, List<CalendarEventViewModel>>(events);
+                return [.. calendarEvents, .. eventCalendarEvents];
             }
             catch (Exception)
             {
@@ -161,7 +153,7 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(dbEvent is not null)
                 {
-                    return _mapper.Map<EventViewModel>(dbEvent);
+                    return _mapper.Map<Event, EventViewModel>(dbEvent);
                 }
                 throw new Exception("Event not found!");
             }
@@ -180,10 +172,10 @@ namespace LMS.Services
                 {
                     dbEvent.Status = DataRecordStatus.Deleted;
                     dbEvent.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    dbEvent.DeletedDate = DateTime.Now;
+                    dbEvent.DeletedDate = DateTime.UtcNow;
                     _appDbContext.Events.Update(dbEvent);
                     await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<EventViewModel>(dbEvent);
+                    return _mapper.Map<Event, EventViewModel>(dbEvent);
                 }
                 throw new Exception("Event not found!");
             }

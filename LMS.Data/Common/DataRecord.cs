@@ -17,7 +17,7 @@ namespace LMS.Data.Common
         [Required]
         public int CreatedBy { get; set; }
         [Required]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public int? ModifiedBy { get; set; }
         public DateTime? ModifiedDate { get; set; }
         public int? DeletedBy { get; set; }

@@ -1,6 +1,6 @@
 ﻿using LMS.Services.Responses;
 
-namespace LMS.Services.Helpers.Interfaces
+namespace LMS.Api.Helpers.Interfaces
 {
     public interface IApiResponseHelper
     {

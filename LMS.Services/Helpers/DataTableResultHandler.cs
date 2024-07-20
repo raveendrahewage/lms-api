@@ -13,7 +13,7 @@ namespace LMS.Services.Helpers
 {
     public static class DataTableResultHandler<T>
     {
-        private static DataTableResult<T> result { get; set; } = new DataTableResult<T>();
+        private static DataTableResult<T> Result { get; set; } = new DataTableResult<T>();
         public static DataTableResult<T> ResultToSsr(
             List<T> list,
             DataTableConfiguration dataTableConfiguration,
@@ -25,28 +25,18 @@ namespace LMS.Services.Helpers
             if (list == null)
                 throw new ArgumentNullException(nameof(list), "Input list cannot be null.");
 
-            result.TotalRecords = list.Count;
+            Result.TotalRecords = list.Count;
 
-            switch (dataTableConfigurationOptions)
+            list = dataTableConfigurationOptions switch
             {
-                case DataTableConfigurationOptions.All:
-                    list = ApplyAll(list, dataTableConfiguration);
-                    break;
-                case DataTableConfigurationOptions.Search:
-                    list = ApplySearch(list, dataTableConfiguration);
-                    break;
-                case DataTableConfigurationOptions.Sorting:
-                    list = ApplySorting(list, dataTableConfiguration);
-                    break;
-                case DataTableConfigurationOptions.Pagination:
-                    list = ApplyPagination(list, dataTableConfiguration);
-                    break;
-                default:
-                    throw new ArgumentException("Invalid table configuration option specified.", nameof(dataTableConfigurationOptions));
-            }
-
-            result.Data = list;
-            return result;
+                DataTableConfigurationOptions.All => ApplyAll(list, dataTableConfiguration),
+                DataTableConfigurationOptions.Search => ApplySearch(list, dataTableConfiguration),
+                DataTableConfigurationOptions.Sorting => ApplySorting(list, dataTableConfiguration),
+                DataTableConfigurationOptions.Pagination => ApplyPagination(list, dataTableConfiguration),
+                _ => throw new ArgumentException("Invalid table configuration option specified.", nameof(dataTableConfigurationOptions)),
+            };
+            Result.Data = list;
+            return Result;
         }
 
         private static List<T> ApplyAll(List<T> list, DataTableConfiguration dataTableConfiguration)
@@ -61,13 +51,11 @@ namespace LMS.Services.Helpers
             switch (dataTableConfiguration.sortMode)
             {
                 case SortMode.Asc:
-                    list = list.OrderBy(x => x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))
-                        .ToList();
+                    list = [.. list.OrderBy(x => x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))];
                     break;
                 case SortMode.Desc:
-                    list = list.OrderByDescending(x =>
-                        x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))
-                        .ToList();
+                    list = [.. list.OrderByDescending(x =>
+                        x.GetType().GetProperty(dataTableConfiguration.sortBy)?.GetValue(x, null))];
                     break;
             }
             return list;
@@ -97,17 +85,17 @@ namespace LMS.Services.Helpers
 
                     var searchTermLower = Expression.Constant(word.ToLower(), typeof(string));
 
-                    var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+                    var containsMethod = typeof(string).GetMethod("Contains", [typeof(string)]);
                     var containsCall = Expression.Call(toLowerCall, containsMethod, searchTermLower);
 
                     var condition = Expression.AndAlso(nullCheck, containsCall);
                     orConditions.Add(condition);
                 }
-                var searchOrCondition = orConditions.Any() ? orConditions.Aggregate(Expression.OrElse) : Expression.Constant(true);
+                var searchOrCondition = orConditions.Count != 0 ? orConditions.Aggregate(Expression.OrElse) : Expression.Constant(true);
                 var searchPredicate = Expression.Lambda<Func<T, bool>>(searchOrCondition, parameter);
-                list = list.AsQueryable().Where(searchPredicate).ToList();
+                list = [.. list.AsQueryable().Where(searchPredicate)];
             }
-            result.TotalRecords = list.Count;
+            Result.TotalRecords = list.Count;
             return list;
         }
 

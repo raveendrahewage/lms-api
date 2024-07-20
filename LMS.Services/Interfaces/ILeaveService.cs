@@ -12,7 +12,7 @@ namespace LMS.Services.Interfaces
         Task<DataTableResult<LeaveListItemViewModel>> GetAllLeavesByEmployeeIdSsr(int id, LeaveFetchingMode leaveFetchingMode, DataTableConfiguration dataTableConfiguration);
         Task<LeaveViewModel> GetLeaveById(int id);
         Task<LeaveViewModel> UpdateLeave(LeaveViewModel model);
-        Task<List<LeaveViewModel>> GetLeavesBetween(DateTime startDate, DateTime endDate);
+        Task<List<LeaveViewModel>> GetLeavesBetween(DateOnly startDate, DateOnly endDate);
         Task<LeaveViewModel> DeleteLeaveById(int id);
         Task<DataTableResult<LeaveListItemViewModel>> GetAllLeavesSsr(DataTableConfiguration dataTableConfiguration);
         Task<List<LeaveReportViewModel>> GenerateLeaveReport();

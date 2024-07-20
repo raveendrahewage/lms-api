@@ -2,6 +2,7 @@
 using Azure;
 using LMS.Data;
 using LMS.Data.Enum;
+using LMS.Data.Extensions;
 using LMS.Data.Models;
 using LMS.Services.Common;
 using LMS.Services.Constants;
@@ -19,21 +20,16 @@ using System.Threading.Tasks;
 
 namespace LMS.Services
 {
-    public class LeaveService : ILeaveService
+    public class LeaveService(
+        ApplicationDbContext appDbContext,
+        IAccountService accountService,
+        IMapper mapper
+        ) : ILeaveService
     {
-        private readonly ApplicationDbContext _appDbContext;
-        private readonly IAccountService _accountService;
-        private readonly IMapper _mapper;
-        public LeaveService(
-            ApplicationDbContext appDbContext,
-            IAccountService accountService,
-            IMapper mapper
-        )
-        {
-            _appDbContext = appDbContext;
-            _accountService = accountService;
-            _mapper = mapper;
-        }
+        private readonly ApplicationDbContext _appDbContext = appDbContext;
+        private readonly IAccountService _accountService = accountService;
+        private readonly IMapper _mapper = mapper;
+
         public async Task<LeaveViewModel> CreateLeave(LeaveViewModel model)
         {
             try
@@ -44,12 +40,12 @@ namespace LMS.Services
                     && x.ToDate <= model.ToDate);
                 if(!isConflictingLeavesAvailable)
                 {
-                    var leaveToBeCreated = _mapper.Map<Leave>(model);
+                    var leaveToBeCreated = _mapper.Map<LeaveViewModel, Leave>(model);
                     leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                     leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
                     var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
                     _appDbContext.SaveChanges();
-                    return _mapper.Map<LeaveViewModel>(result.Entity);
+                    return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
                 }
                 throw new Exception("Selected dates conflict");
             }
@@ -84,7 +80,7 @@ namespace LMS.Services
                                     dbDateWiseLeave.LeaveHalfDayType = modelDateWiseLeave.LeaveHalfDayType;
                                     dbDateWiseLeave.LeaveQuarterDayType = modelDateWiseLeave.LeaveQuarterDayType;
                                     dbDateWiseLeave.ModifiedBy = currentLoggedInUserId;
-                                    dbDateWiseLeave.ModifiedDate = DateTime.Now;
+                                    dbDateWiseLeave.ModifiedDate = DateTime.UtcNow;
                                 }
                                 break;
                             case LeaveStatus.Canceled:
@@ -92,7 +88,7 @@ namespace LMS.Services
                                 break;
                         }
                         leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
-                        leaveToBeUpdated.ModifiedDate = DateTime.Now;
+                        leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     }
                     else if (leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
                     {
@@ -107,13 +103,13 @@ namespace LMS.Services
                                 break;
                         }
                         leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
-                        leaveToBeUpdated.ModifiedDate = DateTime.Now;
+                        leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     }
                     else throw new Exception("You don't have permission to make changes.");
                     
                     var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<LeaveViewModel>(result.Entity);
+                    return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
                 }
                 throw new Exception("Leave not found!");
             }
@@ -138,7 +134,7 @@ namespace LMS.Services
                 var leaves = await _appDbContext.Leaves
                     .Where(x => x.EmployeeId == id || x.Employee.SupervisorId == id)
                     .ToListAsync();
-                return _mapper.Map<List<LeaveViewModel>>(leaves);
+                return _mapper.Map<List<Leave>, List<LeaveViewModel>>(leaves);
             }
             catch (Exception)
             {
@@ -150,42 +146,34 @@ namespace LMS.Services
             try
             {
                 List<Leave> leaves = [];
-                switch (leaveFetchingMode)
+                leaves = leaveFetchingMode switch
                 {
-                    case LeaveFetchingMode.All:
-                        leaves = await _appDbContext.Leaves
-                        .Include(x => x.Employee)
-                            .ThenInclude(x => x.Supervisor)
-                        .Include(x => x.LeaveType)
-                        .Where(x => x.EmployeeId == id || x.Employee.SupervisorId == id)
-                        .ToListAsync();
-                        break;
-                    case LeaveFetchingMode.OnlyMine:
-                        leaves = await _appDbContext.Leaves
-                        .Include(x => x.Employee)
-                            .ThenInclude(x => x.Supervisor)
-                        .Include(x => x.LeaveType)
-                        .Where(x => x.EmployeeId == id)
-                        .ToListAsync();
-                        break;
-                    case LeaveFetchingMode.OnlyApprovals:
-                        leaves = await _appDbContext.Leaves
-                        .Include(x => x.Employee)
-                            .ThenInclude(x => x.Supervisor)
-                        .Include(x => x.LeaveType)
-                        .Where(x => x.Employee.SupervisorId == id)
-                        .ToListAsync();
-                        break;
-                    default:
-                        leaves = await _appDbContext.Leaves
-                        .Include(x => x.Employee)
-                            .ThenInclude(x => x.Supervisor)
-                        .Include(x => x.LeaveType)
-                        .Where(x => x.EmployeeId == id || x.Employee.SupervisorId == id)
-                        .ToListAsync();
-                        break;
-                }
-                var leaveListItemViewModels = _mapper.Map<List<LeaveListItemViewModel>>(leaves);
+                    LeaveFetchingMode.All => await _appDbContext.Leaves
+                                            .Include(x => x.Employee)
+                                                .ThenInclude(x => x.Supervisor)
+                                            .Include(x => x.LeaveType)
+                                            .Where(x => x.EmployeeId == id || x.Employee.SupervisorId == id)
+                                            .ToListAsync(),
+                    LeaveFetchingMode.OnlyMine => await _appDbContext.Leaves
+                                            .Include(x => x.Employee)
+                                                .ThenInclude(x => x.Supervisor)
+                                            .Include(x => x.LeaveType)
+                                            .Where(x => x.EmployeeId == id)
+                                            .ToListAsync(),
+                    LeaveFetchingMode.OnlyApprovals => await _appDbContext.Leaves
+                                            .Include(x => x.Employee)
+                                                .ThenInclude(x => x.Supervisor)
+                                            .Include(x => x.LeaveType)
+                                            .Where(x => x.Employee.SupervisorId == id)
+                                            .ToListAsync(),
+                    _ => await _appDbContext.Leaves
+                                            .Include(x => x.Employee)
+                                                .ThenInclude(x => x.Supervisor)
+                                            .Include(x => x.LeaveType)
+                                            .Where(x => x.EmployeeId == id || x.Employee.SupervisorId == id)
+                                            .ToListAsync(),
+                };
+                var leaveListItemViewModels = _mapper.Map<List<Leave>, List<LeaveListItemViewModel>>(leaves);
                 return DataTableResultHandler<LeaveListItemViewModel>.ResultToSsr(leaveListItemViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
@@ -205,7 +193,7 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if (leave is not null)
                 {
-                    return _mapper.Map<LeaveViewModel>(leave);
+                    return _mapper.Map<Leave, LeaveViewModel>(leave);
                 }
                 throw new Exception("Leave not found!");
             }
@@ -223,7 +211,7 @@ namespace LMS.Services
                             .ThenInclude(x => x.Supervisor)
                         .Include(x => x.LeaveType)
                         .ToListAsync();
-                var leaveViewModels = _mapper.Map<List<LeaveListItemViewModel>>(leaves);
+                var leaveViewModels = _mapper.Map<List<Leave>, List<LeaveListItemViewModel>>(leaves);
                 return DataTableResultHandler<LeaveListItemViewModel>.ResultToSsr(leaveViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
             }
             catch (Exception)
@@ -231,14 +219,14 @@ namespace LMS.Services
                 throw;
             }
         }
-        public async Task<List<LeaveViewModel>> GetLeavesBetween(DateTime startDate, DateTime endDate)
+        public async Task<List<LeaveViewModel>> GetLeavesBetween(DateOnly startDate, DateOnly endDate)
         {
             try
             {
                 var leaves = await _appDbContext.Leaves
                     .Where(x => x.FromDate >= startDate && x.FromDate <= endDate)
                     .ToListAsync();
-                return _mapper.Map<List<LeaveViewModel>>(leaves);
+                return _mapper.Map<List<Leave>, List<LeaveViewModel>>(leaves);
             }
             catch (Exception)
             {
@@ -255,10 +243,10 @@ namespace LMS.Services
                 {
                     leave.Status = DataRecordStatus.Deleted;
                     leave.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    leave.DeletedDate = DateTime.Now;
+                    leave.DeletedDate = DateTime.UtcNow;
                     _appDbContext.Leaves.Update(leave);
                     await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<LeaveViewModel>(leave);
+                    return _mapper.Map<Leave, LeaveViewModel>(leave);
                 }
                 throw new Exception("Leave not found!");
             }
@@ -270,12 +258,13 @@ namespace LMS.Services
 
         public async Task<List<LeaveReportViewModel>> GenerateLeaveReport()
         {
-            var oneYearAgo = DateTime.Today.AddYears(-1);
+            var oneYearAgoDateTime = DateTime.Today.AddYears(-1);
+            var oneYearAgoDateOnly = new DateOnly(oneYearAgoDateTime.Year, oneYearAgoDateTime.Month, oneYearAgoDateTime.Day);
 
             var query = from lr in _appDbContext.Leaves
                         join e in _appDbContext.SystemUsers on lr.EmployeeId equals e.Id
                         join lt in _appDbContext.LeaveTypes on lr.LeaveTypeId equals lt.Id
-                        where lr.FromDate >= oneYearAgo || lr.ToDate >= oneYearAgo
+                        where lr.FromDate >= oneYearAgoDateOnly || lr.ToDate >= oneYearAgoDateOnly
                         group lr by new { lt.Name, lr.LeaveTypeId, lr.FromDate.Month, lr.LeaveStatus } into g
                         orderby g.Key.Month
                         select new LeaveReportViewModel

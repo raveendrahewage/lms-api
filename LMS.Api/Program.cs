@@ -1,10 +1,11 @@
 using AutoMapper;
+using LMS.Api.Helpers;
+using LMS.Api.Helpers.Interfaces;
 using LMS.Api.Middleware;
 using LMS.Data;
 using LMS.Data.Models;
 using LMS.Services;
 using LMS.Services.Helpers;
-using LMS.Services.Helpers.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,9 +22,10 @@ var JWTSetting = builder.Configuration.GetSection("JWTSetting");
 
 // Add services to the container.
 builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"));
-});
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"));
+    }
+);
 
 builder.Services.AddIdentity<SystemUser, SystemRole>(options =>
     {
@@ -41,7 +43,8 @@ builder.Services.AddIdentity<SystemUser, SystemRole>(options =>
 
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.";
         options.User.RequireUniqueEmail = true;
-    })
+    }
+)
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
@@ -49,28 +52,29 @@ builder.Services.AddAuthentication(opt => {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(opt => {
+    }
+).AddJwtBearer(opt => {
     opt.SaveToken = true;
     opt.RequireHttpsMetadata = false;
     opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        //ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidAudience = JWTSetting["ValidAudience"],
-        ValidIssuer = JWTSetting["ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSetting.GetSection("SecurityKey").Value!))
-    };
-});
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            //ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = JWTSetting["ValidAudience"],
+            ValidIssuer = JWTSetting["ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSetting.GetSection("SecurityKey").Value!))
+        };
+    }
+);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
-var mappingConfiguration = new MapperConfiguration(mc => { mc.AddProfile(new AutoMapperProfile()); });
-builder.Services.AddSingleton(mappingConfiguration.CreateMapper());
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
