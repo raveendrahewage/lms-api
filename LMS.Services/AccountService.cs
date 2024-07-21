@@ -221,5 +221,9 @@ namespace LMS.Services
         }
         public string GetCurrentLoggedInUsername() => _httpContextAccessor?.HttpContext?.User?.Claims?.FirstOrDefault(x => x.Type == AuthClaim.SysUserUsername)?.Value ?? string.Empty;
         public int GetCurrentLoggedInUserId() => Convert.ToInt32(_httpContextAccessor?.HttpContext?.User?.Claims?.FirstOrDefault(x => x.Type == AuthClaim.SysUserUserId)?.Value ?? "0");
+
+        public SystemUser? GetCurrentLoggedInUser() => _appDbContext.SystemUsers
+            .Include(x => x.Role)
+            .FirstOrDefault(x => x.Id == GetCurrentLoggedInUserId());
     }
 }

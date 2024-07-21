@@ -1,4 +1,5 @@
 ﻿using LMS.Api.ViewModels;
+using LMS.Data.Models;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
 using System;
@@ -18,5 +19,6 @@ namespace LMS.Services.Interfaces
         public Task<SystemUserViewModel> GetLoggedInSystemUser();
         public string GetCurrentLoggedInUsername();
         public int GetCurrentLoggedInUserId();
+        public SystemUser? GetCurrentLoggedInUser();
     }
 }

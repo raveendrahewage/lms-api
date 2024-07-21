@@ -74,6 +74,21 @@ namespace LMS.Api.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("get-leave-types-for-employee")]
+        public async Task<IActionResult> GetLeaveTypesForEmployee(int id)
+        {
+            try
+            {
+                var result = await _leaveTypeService.GetLeaveTypesForEmployee(id);
+                return Ok(_apiResponseHelper.GenerateApiResponse(true, result));
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         [HttpPost]
         [Route("get-leave-types/ssr")]
         public async Task<IActionResult> GetAllLeaveTypesSsr(DataTableConfiguration dataTableConfiguration)

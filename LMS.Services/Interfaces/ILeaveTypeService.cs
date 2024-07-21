@@ -9,6 +9,7 @@ namespace LMS.Services.Interfaces
         Task<LeaveTypeViewModel> CreateLeaveType(LeaveTypeViewModel model);
         Task<LeaveTypeViewModel> DeleteLeaveTypeById(int id);
         Task<List<LeaveTypeViewModel>> GetAllLeaveTypes();
+        Task<List<LeaveAvailabilityViewModel>> GetLeaveTypesForEmployee(int id);
         Task<DataTableResult<LeaveTypeViewModel>> GetAllLeaveTypesSsr(DataTableConfiguration dataTableConfiguration);
         Task<List<LeaveTypeViewModel>> GetLeavesTypeByName(string typeName);
         Task<LeaveTypeViewModel> GetLeaveTypeById(int id);

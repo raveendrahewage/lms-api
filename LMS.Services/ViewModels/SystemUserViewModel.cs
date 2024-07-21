@@ -23,5 +23,6 @@ namespace LMS.Services.ViewModels
         public virtual SystemRoleViewModel? Role { get; set; }
         public virtual List<LeaveViewModel> Leaves { get; set; } = [];
         public virtual List<LeaveViewModel> ReviewedLeaves { get; set; } = [];
+        public virtual List<LeaveAvailabilityViewModel> LeaveAvailabilities { get; set; } = [];
     }
 }

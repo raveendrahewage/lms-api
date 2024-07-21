@@ -117,14 +117,19 @@ namespace LMS.Services
         }
         public async Task<SystemUserViewModel> CreateNewEmployee(SignUpViewModel model)
         {
+            var loggedInUser = _accountService.GetCurrentLoggedInUser();
+            if (loggedInUser is null || !(loggedInUser.Role?.Name ?? string.Empty).Equals(SysRole.Admin))
+                throw new Exception("You don't have permission to make changes to this employee.");
+
             using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var signUpResult = await CreateSystemUserAsync(model);
-                if (signUpResult)
+                var systemUser = await _userManager.FindByEmailAsync(model.Email);
+                if (signUpResult && systemUser is not null)
                 {
-                    var systemUser = await _userManager.FindByEmailAsync(model.Email);
                     await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                    await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
                     await _appDbContext.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
@@ -158,11 +163,15 @@ namespace LMS.Services
 
         public async Task<SystemUserViewModel> UpdateEmployee(SystemUserViewModel model)
         {
+            var loggedInUser = _accountService.GetCurrentLoggedInUser();
+            if (loggedInUser is null || !(loggedInUser.Role?.Name ?? string.Empty).Equals(SysRole.Admin) && loggedInUser.Id != model.Id)
+                throw new Exception("You don't have permission to make changes to this employee.");
+
             using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var systemUser = await _appDbContext.SystemUsers
-                    .Include(x =>x.Role)
+                    .Include(x => x.Role)
                     .FirstOrDefaultAsync(x => x.Id == model.Id);
                 if (systemUser is not null)
                 {
@@ -180,7 +189,12 @@ namespace LMS.Services
                     var result = await _userManager.UpdateAsync(systemUser);
                     if (result.Succeeded)
                     {
-                        await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                        if((loggedInUser.Role?.Name ?? string.Empty).Equals(SysRole.Admin))
+                        {
+                            await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                            await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
+                        }
+
                         await _appDbContext.SaveChangesAsync();
                         await transaction.CommitAsync();
                         return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
@@ -205,7 +219,7 @@ namespace LMS.Services
                     .FirstOrDefaultAsync(x => x.Id == id);
                 if(systemUser is not null)
                 {
-                    return _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUser?.EmployeesUnderSupervision);
+                    return _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUser.EmployeesUnderSupervision);
                 }
                 throw new Exception("Employee not found!");
             }
@@ -274,6 +288,28 @@ namespace LMS.Services
             }
 
             _appDbContext.UpdateRange(employees);
+        }
+        private async Task UpdateOrCreateLeaveAvailabulities(IEnumerable<LeaveAvailabilityViewModel> leaveAvailabilities)
+        {
+            foreach (var leaveAvailabilityViewModel in leaveAvailabilities)
+            {
+                var leaveAvailability = await _appDbContext.LeaveAvailabilities
+                    .FirstOrDefaultAsync(x => x.Year == DateTime.UtcNow.Year && x.SystemUserId == leaveAvailabilityViewModel.SystemUserId && x.LeaveTypeId == leaveAvailabilityViewModel.LeaveTypeId);
+                if (leaveAvailability is not null)
+                {
+                    leaveAvailability.LeaveCount = leaveAvailabilityViewModel.LeaveCount;
+                    leaveAvailability.BalanceCount = leaveAvailabilityViewModel.LeaveCount - leaveAvailability.BookedCount;
+                    leaveAvailability.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                    leaveAvailability.ModifiedDate = DateTime.UtcNow;
+
+                    _appDbContext.LeaveAvailabilities.Update(leaveAvailability);
+                }
+                else
+                {
+                    var dbLeaveAvailability = _mapper.Map<LeaveAvailabilityViewModel, LeaveAvailability>(leaveAvailabilityViewModel);
+                    await _appDbContext.LeaveAvailabilities.AddAsync(dbLeaveAvailability);
+                }
+            }
         }
     }
 }

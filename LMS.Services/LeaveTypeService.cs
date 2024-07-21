@@ -79,6 +79,21 @@ namespace LMS.Services
                 throw;
             }
         }
+        public async Task<List<LeaveAvailabilityViewModel>> GetLeaveTypesForEmployee(int id)
+        {
+            try
+            {
+                var leaveAvailabilities= await _appDbContext.LeaveAvailabilities
+                    .Include(x => x.LeaveType)
+                    .Where(x => x.SystemUserId == id)
+                    .ToListAsync();
+                return _mapper.Map<List<LeaveAvailability>, List<LeaveAvailabilityViewModel>>(leaveAvailabilities);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
         public async Task<DataTableResult<LeaveTypeViewModel>> GetAllLeaveTypesSsr(DataTableConfiguration dataTableConfiguration)
         {
