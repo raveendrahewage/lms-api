@@ -14,7 +14,7 @@ namespace LMS.Services.Helpers
 
         public override DateOnly ReadJson(JsonReader reader, Type objectType, DateOnly existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.Date)
+            if (reader.TokenType == JsonToken.Date || reader.TokenType == JsonToken.String)
             {
                 var dateString = reader.Value.ToString();
                 if (DateTime.TryParse(dateString, out DateTime dateTime))

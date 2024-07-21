@@ -24,5 +24,6 @@ namespace LMS.Services.ViewModels
         [Required]
         public int RoleId { get; set; }
         public int? SupervisorId { get; set; }
+        public virtual List<SystemUserViewModel> EmployeesUnderSupervision { get; set; } = [];
     }
 }

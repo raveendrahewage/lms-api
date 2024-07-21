@@ -117,18 +117,23 @@ namespace LMS.Services
         }
         public async Task<SystemUserViewModel> CreateNewEmployee(SignUpViewModel model)
         {
+            using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var signUpResult = await CreateSystemUserAsync(model);
                 if (signUpResult)
                 {
                     var systemUser = await _userManager.FindByEmailAsync(model.Email);
+                    await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                    await _appDbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
                     return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                 }
                 throw new Exception("Employee was not created! Something went wrong.");
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -137,6 +142,7 @@ namespace LMS.Services
             try
             {
                 var newSystemUser = _mapper.Map<SignUpViewModel, SystemUser>(model);
+                newSystemUser.EmployeesUnderSupervision = [];
                 newSystemUser.EmailConfirmed = true;
                 newSystemUser.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 newSystemUser.SupervisorId = model.SupervisorId is not null && model.SupervisorId > 0 ? model.SupervisorId : null;
@@ -152,6 +158,7 @@ namespace LMS.Services
 
         public async Task<SystemUserViewModel> UpdateEmployee(SystemUserViewModel model)
         {
+            using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var systemUser = await _appDbContext.SystemUsers
@@ -173,7 +180,9 @@ namespace LMS.Services
                     var result = await _userManager.UpdateAsync(systemUser);
                     if (result.Succeeded)
                     {
+                        await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
                         await _appDbContext.SaveChangesAsync();
+                        await transaction.CommitAsync();
                         return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                     }
                     throw new Exception("Updating failed!. Something went wrong.");
@@ -182,6 +191,7 @@ namespace LMS.Services
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -247,6 +257,23 @@ namespace LMS.Services
             {
                 throw;
             }
+        }
+
+        private async Task UpdateEmployeesUnderSupervision(IEnumerable<SystemUserViewModel> employeesUnderSupervision, int supervisorId)
+        {
+            var employeeIds = employeesUnderSupervision.Select(e => e.Id).ToList();
+            var employees = await _appDbContext.SystemUsers
+                .Where(x => employeeIds.Contains(x.Id))
+                .ToListAsync();
+
+            foreach (var employee in employees)
+            {
+                employee.SupervisorId = supervisorId;
+                employee.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                employee.ModifiedDate = DateTime.UtcNow;
+            }
+
+            _appDbContext.UpdateRange(employees);
         }
     }
 }
