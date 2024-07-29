@@ -52,6 +52,7 @@ namespace LMS.Services
                 if(leaveTypeToBeUpdated is not null)
                 {
                     leaveTypeToBeUpdated.Name = model.Name;
+                    leaveTypeToBeUpdated.DefaultLeaveCount = model.DefaultLeaveCount;
                     leaveTypeToBeUpdated.Status = model.Status;
                     leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                     leaveTypeToBeUpdated.ModifiedDate = DateTime.UtcNow;

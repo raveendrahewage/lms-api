@@ -18,7 +18,7 @@ namespace LMS.Services.ViewModels
         public int BookedCount { get; set; }
         public int BalanceCount { get; set; }
 
-        public virtual LeaveTypeViewModel LeaveType { get; set; }
-        public virtual SystemUserViewModel SystemUser { get; set; }
+        public virtual LeaveTypeViewModel? LeaveType { get; set; }
+        public virtual SystemUserViewModel? SystemUser { get; set; }
     }
 }
