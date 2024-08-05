@@ -17,5 +17,6 @@ namespace LMS.Data.Models
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public EventStatus EventStatus { get; set; }
+        public EventMode EventMode { get; set; } = EventMode.Private;
     }
 }

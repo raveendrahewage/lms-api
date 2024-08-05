@@ -21,5 +21,6 @@ namespace LMS.Services.ViewModels
         [JsonConverter(typeof(DateOnlyJsonConverter))]
         public DateOnly EndDate { get; set; }
         public EventStatus EventStatus { get; set; }
+        public EventMode EventMode { get; set; }
     }
 }

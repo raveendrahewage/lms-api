@@ -59,6 +59,7 @@ namespace LMS.Services
                     eventToBeUpdated.StartDate = model.StartDate;
                     eventToBeUpdated.EndDate = model.EndDate;
                     eventToBeUpdated.EventStatus = model.EventStatus;
+                    eventToBeUpdated.EventMode = model.EventMode;
                     eventToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                     eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     var result = _appDbContext.Events.Update(eventToBeUpdated);
@@ -104,15 +105,15 @@ namespace LMS.Services
         {
             try
             {
+                var loggedInUserId = _accountService.GetCurrentLoggedInUserId();
                 var calendarEvents = new List<CalendarEventViewModel>();
                 var leaves = await _appDbContext.Leaves
                     .Include(x => x.LeaveType)
                     .Include(x => x.DateWiseLeaves)
                     .Include(x => x.Employee)
                     .Where(x =>
-                        //x.LeaveStatus == LeaveStatus.Approved
-                        //&& 
-                        (x.FromDate >= startDate || x.ToDate <= endDate)
+                        x.LeaveStatus == LeaveStatus.Approved
+                        && (x.FromDate >= startDate || x.ToDate <= endDate)
                         || (x.FromDate <= startDate && x.ToDate >= endDate))
                     .ToListAsync();
                 foreach (var leave in leaves)
@@ -132,9 +133,9 @@ namespace LMS.Services
                 }
                 var events = await _appDbContext.Events
                     .Where(x =>
-                        //x.EventStatus == EventStatus.Active
-                        //&&
-                        (x.StartDate >= startDate || x.EndDate <= endDate)
+                        x.EventStatus == EventStatus.Active
+                        && (x.CreatedBy == loggedInUserId || x.EventMode == EventMode.Public)
+                        && (x.StartDate >= startDate || x.EndDate <= endDate)
                         || (x.StartDate <= startDate && x.EndDate >= endDate))
                     .ToListAsync();
                 var eventCalendarEvents = _mapper.Map<List<Event>, List<CalendarEventViewModel>>(events);
