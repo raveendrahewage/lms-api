@@ -91,7 +91,9 @@ namespace LMS.Services
         {
             try
             {
+                var loggedInUserId = _accountService.GetCurrentLoggedInUserId();
                 var events = await _appDbContext.Events
+                    .Where(x => x.CreatedBy == loggedInUserId || x.EventMode == EventMode.Public)
                     .ToListAsync();
                 var eventViewModels = _mapper.Map<List<Event>, List<EventViewModel>>(events);
                 return DataTableResultHandler<EventViewModel>.ResultToSsr(eventViewModels, dataTableConfiguration, DataTableConfigurationOptions.All);
