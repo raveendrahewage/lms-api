@@ -64,7 +64,7 @@ namespace LMS.Services
                     eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
                     var result = _appDbContext.Events.Update(eventToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
-                    return model;
+                    return _mapper.Map<Event, EventViewModel>(result.Entity);
                 }
                 throw new Exception("Event not found!");
             }
@@ -111,6 +111,7 @@ namespace LMS.Services
                 var calendarEvents = new List<CalendarEventViewModel>();
                 var leaves = await _appDbContext.Leaves
                     .Include(x => x.LeaveType)
+                    .Include(x => x.Employee)
                     .Include(x => x.DateWiseLeaves)
                     .Include(x => x.Employee)
                     .Where(x =>
@@ -125,6 +126,8 @@ namespace LMS.Services
                         var calendarEvent = new CalendarEventViewModel
                         {
                             CalendarEventId = leave.Id,
+                            SystemUserId = leave.EmployeeId,
+                            SupervisorId = leave.Employee.SupervisorId,
                             CalendarEventType = CalendarEventType.Leave,
                             StartDate = dateWiseLeave.Date,
                             EndDate = dateWiseLeave.Date,

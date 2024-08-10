@@ -75,7 +75,7 @@ namespace LMS.Api.Controllers
         }
 
         [HttpGet]
-        [Route("get-leave-types-for-employee")]
+        [Route("get-leave-types-for-employee/{id}")]
         public async Task<IActionResult> GetLeaveTypesForEmployee(int id)
         {
             try

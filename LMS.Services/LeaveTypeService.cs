@@ -56,9 +56,9 @@ namespace LMS.Services
                     leaveTypeToBeUpdated.Status = model.Status;
                     leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
                     leaveTypeToBeUpdated.ModifiedDate = DateTime.UtcNow;
-                    _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
+                    var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
                     await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<LeaveType, LeaveTypeViewModel>(leaveTypeToBeUpdated);
+                    return _mapper.Map<LeaveType, LeaveTypeViewModel>(result.Entity);
                 }
                 throw new Exception("Leave type not found!");
             }
@@ -80,15 +80,16 @@ namespace LMS.Services
                 throw;
             }
         }
-        public async Task<List<LeaveAvailabilityViewModel>> GetLeaveTypesForEmployee(int id)
+        public async Task<List<LeaveTypeViewModel>> GetLeaveTypesForEmployee(int id)
         {
             try
             {
                 var leaveAvailabilities= await _appDbContext.LeaveAvailabilities
                     .Include(x => x.LeaveType)
-                    .Where(x => x.SystemUserId == id)
+                    .Where(x => x.SystemUserId == id && x.Year == DateTime.UtcNow.Year)
+                    .Select(x => x.LeaveType)
                     .ToListAsync();
-                return _mapper.Map<List<LeaveAvailability>, List<LeaveAvailabilityViewModel>>(leaveAvailabilities);
+                return _mapper.Map<List<LeaveType>, List<LeaveTypeViewModel>>(leaveAvailabilities);
             }
             catch (Exception)
             {

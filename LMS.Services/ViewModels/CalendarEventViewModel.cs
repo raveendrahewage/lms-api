@@ -13,6 +13,8 @@ namespace LMS.Services.ViewModels
     public class CalendarEventViewModel
     {
         public int CalendarEventId { get; set; }
+        public int? SupervisorId { get; set; }
+        public int SystemUserId { get; set; }
         public string Title { get; set; } = string.Empty;
         public CalendarEventType CalendarEventType { get; set; }
         [JsonConverter(typeof(DateOnlyJsonConverter))]

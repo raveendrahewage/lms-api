@@ -52,6 +52,7 @@ namespace LMS.Services.Mappings
             CreateMap<LeaveAvailability, LeaveAvailabilityViewModel>().ReverseMap();
 
             CreateMap<Event, CalendarEventViewModel>()
+                .ForMember(d => d.SystemUserId, opt => opt.MapFrom(s => s.CreatedBy))
                 .ForMember(d => d.CalendarEventType, opt => opt.MapFrom(s => CalendarEventType.Event))
                 .ForMember(d => d.CalendarEventId, opt => opt.MapFrom(s => s.Id));
         }

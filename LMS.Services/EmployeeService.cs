@@ -197,6 +197,9 @@ namespace LMS.Services
 
                         await _appDbContext.SaveChangesAsync();
                         await transaction.CommitAsync();
+                        systemUser = await _appDbContext.SystemUsers
+                            .Include(x => x.Role)
+                            .FirstAsync(x => x.Id == model.Id);
                         return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
                     }
                     throw new Exception("Updating failed!. Something went wrong.");
