@@ -38,5 +38,20 @@ namespace LMS.Data.Models
                 return $"{leaveType} - {leaveDayDescription} {leaveDescription}".Trim();
             }
         }
+
+        [NotMapped]
+        public double LeaveCount
+        {
+            get
+            {
+                return LeaveDayType switch
+                {
+                    LeaveDayType.FullDay => 1,
+                    LeaveDayType.HalfDay => 0.5,
+                    LeaveDayType.QuarterDay => 0.25,
+                    _ => 0,
+                };
+            }
+        }
     }
 }

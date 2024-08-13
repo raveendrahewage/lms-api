@@ -82,11 +82,9 @@ namespace LMS.Services
                     .Include(x => x.EmployeesUnderSupervision)
                     .Include(x => x.LeaveAvailabilities.Where(x => x.Year == DateTime.UtcNow.Year))
                     .FirstOrDefaultAsync(x => x.Id == id);
-                if(systemUser is not null)
-                {
-                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                }
-                throw new Exception("Employee not found!");
+                return systemUser is null
+                    ? throw new Exception("Employee not found!")
+                    : _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
             }
             catch (Exception)
             {
@@ -104,11 +102,9 @@ namespace LMS.Services
                     .Include(x => x.ReviewedLeaves)
                     .Include(x => x.EmployeesUnderSupervision)
                     .FirstOrDefaultAsync(x => (x.FirstName.ToLower().Trim() + " " + x.LastName.ToLower().Trim()).Equals(fullName.Trim().ToLower()));
-                if(systemUser is not null)
-                {
-                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                }
-                throw new Exception("Employee not found!");
+                return systemUser is null
+                    ? throw new Exception("Employee not found!")
+                    : _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
             }
             catch (Exception)
             {
@@ -126,15 +122,14 @@ namespace LMS.Services
             {
                 var signUpResult = await CreateSystemUserAsync(model);
                 var systemUser = await _userManager.FindByEmailAsync(model.Email);
-                if (signUpResult && systemUser is not null)
-                {
-                    await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
-                    await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
-                    await _appDbContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                }
-                throw new Exception("Employee was not created! Something went wrong.");
+                if (!signUpResult && systemUser is null)
+                    throw new Exception("Employee was not created! Something went wrong.");
+
+                await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
+                await _appDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
             }
             catch (Exception)
             {
@@ -172,39 +167,35 @@ namespace LMS.Services
             {
                 var systemUser = await _appDbContext.SystemUsers
                     .Include(x => x.Role)
-                    .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if (systemUser is not null)
-                {
-                    systemUser.FirstName = model.FirstName;
-                    systemUser.LastName = model.LastName;
-                    systemUser.PhoneNumber = model.PhoneNumber;
-                    systemUser.Email = model.Email;
-                    systemUser.UserName = model.Email;
-                    systemUser.NormalizedEmail = model.Email;
-                    systemUser.NormalizedUserName = model.Email;
-                    systemUser.SupervisorId = model.SupervisorId;
-                    systemUser.Status = model.Status;
-                    systemUser.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    systemUser.ModifiedDate = DateTime.UtcNow;
-                    var result = await _userManager.UpdateAsync(systemUser);
-                    if (result.Succeeded)
-                    {
-                        if((loggedInUser.Role?.Name ?? string.Empty).Equals(SysRole.Admin))
-                        {
-                            await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
-                            await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
-                        }
+                    .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new Exception("Employee not found!");
 
-                        await _appDbContext.SaveChangesAsync();
-                        await transaction.CommitAsync();
-                        systemUser = await _appDbContext.SystemUsers
-                            .Include(x => x.Role)
-                            .FirstAsync(x => x.Id == model.Id);
-                        return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                    }
+                systemUser.FirstName = model.FirstName;
+                systemUser.LastName = model.LastName;
+                systemUser.PhoneNumber = model.PhoneNumber;
+                systemUser.Email = model.Email;
+                systemUser.UserName = model.Email;
+                systemUser.NormalizedEmail = model.Email;
+                systemUser.NormalizedUserName = model.Email;
+                systemUser.SupervisorId = model.SupervisorId;
+                systemUser.Status = model.Status;
+                systemUser.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                systemUser.ModifiedDate = DateTime.UtcNow;
+                var result = await _userManager.UpdateAsync(systemUser);
+                if (result is null || !result.Succeeded)
                     throw new Exception("Updating failed!. Something went wrong.");
+
+                if ((loggedInUser.Role?.Name ?? string.Empty).Equals(SysRole.Admin))
+                {
+                    await UpdateEmployeesUnderSupervision(model.EmployeesUnderSupervision, systemUser.Id);
+                    await UpdateOrCreateLeaveAvailabulities(model.LeaveAvailabilities);
                 }
-                throw new Exception("Employee not found!");
+
+                await _appDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                systemUser = await _appDbContext.SystemUsers
+                    .Include(x => x.Role)
+                    .FirstAsync(x => x.Id == model.Id);
+                return _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
             }
             catch (Exception)
             {
@@ -220,11 +211,9 @@ namespace LMS.Services
                     .Include(x => x.EmployeesUnderSupervision)
                         .ThenInclude(x => x.Role)
                     .FirstOrDefaultAsync(x => x.Id == id);
-                if(systemUser is not null)
-                {
-                    return _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUser.EmployeesUnderSupervision);
-                }
-                throw new Exception("Employee not found!");
+                return systemUser is null
+                    ? throw new Exception("Employee not found!")
+                    : _mapper.Map<List<SystemUser>, List<SystemUserViewModel>>(systemUser.EmployeesUnderSupervision);
             }
             catch (Exception)
             {
@@ -236,17 +225,14 @@ namespace LMS.Services
             try
             {
                 var employee = await _appDbContext.SystemUsers
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                if (employee is not null)
-                {
-                    employee.Status = DataRecordStatus.Deleted;
-                    employee.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    employee.DeletedDate = DateTime.UtcNow;
-                    _appDbContext.SystemUsers.Update(employee);
-                    await _appDbContext.SaveChangesAsync();
-                   return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
-                }
-                throw new Exception("Employee not found!");
+                    .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Employee not found!");
+
+                employee.Status = DataRecordStatus.Deleted;
+                employee.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                employee.DeletedDate = DateTime.UtcNow;
+                _appDbContext.SystemUsers.Update(employee);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
             }
             catch (Exception)
             {
@@ -258,17 +244,14 @@ namespace LMS.Services
             try
             {
                 var employee = await _appDbContext.SystemUsers
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                if (employee is not null)
-                {
-                    employee.Status = DataRecordStatus.Inactive;
-                    employee.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    employee.ModifiedDate = DateTime.UtcNow;
-                    _appDbContext.SystemUsers.Update(employee);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
-                }
-                throw new Exception("Employee not found!");
+                    .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Employee not found!");
+
+                employee.Status = DataRecordStatus.Inactive;
+                employee.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                employee.ModifiedDate = DateTime.UtcNow;
+                _appDbContext.SystemUsers.Update(employee);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<SystemUser, SystemUserViewModel>(employee);
             }
             catch (Exception)
             {

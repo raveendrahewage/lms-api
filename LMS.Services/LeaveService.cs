@@ -32,86 +32,105 @@ namespace LMS.Services
 
         public async Task<LeaveViewModel> CreateLeave(LeaveViewModel model)
         {
+            using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var isConflictingLeavesAvailable = _appDbContext.Leaves.Any(x =>
                     x.EmployeeId == _accountService.GetCurrentLoggedInUserId()
                     && x.FromDate >= model.FromDate
                     && x.ToDate <= model.ToDate);
-                if(!isConflictingLeavesAvailable)
-                {
-                    var leaveToBeCreated = _mapper.Map<LeaveViewModel, Leave>(model);
-                    leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
-                    leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
-                    var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
-                    _appDbContext.SaveChanges();
-                    return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
-                }
-                throw new Exception("Selected dates conflict");
+                if(isConflictingLeavesAvailable)
+                    throw new Exception("Selected dates are conflicting");
+
+                var leaveToBeCreated = _mapper.Map<LeaveViewModel, Leave>(model);
+                leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
+                leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
+                var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
+                var leaveAvailability = await _appDbContext.LeaveAvailabilities
+                    .FirstAsync(x => x.Year == leaveToBeCreated.FromDate.Year
+                    && x.SystemUserId == leaveToBeCreated.EmployeeId
+                    && x.LeaveTypeId == leaveToBeCreated.LeaveTypeId);
+                leaveAvailability.BalanceCount -= leaveToBeCreated.LeaveCount;
+                leaveAvailability.BookedCount += leaveToBeCreated.LeaveCount;
+                _appDbContext.SaveChanges();
+                return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
         public async Task<LeaveViewModel> UpdateLeave(LeaveViewModel model)
         {
+            using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
                 var leaveToBeUpdated = await _appDbContext.Leaves
                     .Include(x => x.Employee)
                     .Include(x => x.DateWiseLeaves)
-                    .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if (leaveToBeUpdated is not null)
+                    .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new Exception("Leave not found!");
+
+                var currentLoggedInUserId = _accountService.GetCurrentLoggedInUserId();
+                if(leaveToBeUpdated.EmployeeId != currentLoggedInUserId || leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
+                    throw new Exception("You don't have permission to make changes.");
+
+                if (leaveToBeUpdated.EmployeeId == currentLoggedInUserId)
                 {
-                    var currentLoggedInUserId = _accountService.GetCurrentLoggedInUserId();
-                    if (leaveToBeUpdated.EmployeeId == currentLoggedInUserId)
+                    switch (model.LeaveStatus)
                     {
-                        switch (model.LeaveStatus)
-                        {
-                            case LeaveStatus.Pending:
-                                leaveToBeUpdated.LeaveTypeId = model.LeaveTypeId;
-                                leaveToBeUpdated.Reason = model.Reason;
-                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Pending;
-                                foreach (var dbDateWiseLeave in leaveToBeUpdated.DateWiseLeaves)
-                                {
-                                    var modelDateWiseLeave = model.DateWiseLeaves.First(x => x.Id == dbDateWiseLeave.Id);
-                                    dbDateWiseLeave.LeaveDayType = modelDateWiseLeave.LeaveDayType;
-                                    dbDateWiseLeave.LeaveHalfDayType = modelDateWiseLeave.LeaveHalfDayType;
-                                    dbDateWiseLeave.LeaveQuarterDayType = modelDateWiseLeave.LeaveQuarterDayType;
-                                    dbDateWiseLeave.ModifiedBy = currentLoggedInUserId;
-                                    dbDateWiseLeave.ModifiedDate = DateTime.UtcNow;
-                                }
-                                break;
-                            case LeaveStatus.Canceled:
-                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Canceled;
-                                break;
-                        }
-                        leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
-                        leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
+                        case LeaveStatus.Pending:
+                            leaveToBeUpdated.LeaveTypeId = model.LeaveTypeId;
+                            leaveToBeUpdated.Reason = model.Reason;
+                            leaveToBeUpdated.LeaveStatus = LeaveStatus.Pending;
+                            foreach (var dbDateWiseLeave in leaveToBeUpdated.DateWiseLeaves)
+                            {
+                                var modelDateWiseLeave = model.DateWiseLeaves.First(x => x.Id == dbDateWiseLeave.Id);
+                                dbDateWiseLeave.LeaveDayType = modelDateWiseLeave.LeaveDayType;
+                                dbDateWiseLeave.LeaveHalfDayType = modelDateWiseLeave.LeaveHalfDayType;
+                                dbDateWiseLeave.LeaveQuarterDayType = modelDateWiseLeave.LeaveQuarterDayType;
+                                dbDateWiseLeave.ModifiedBy = currentLoggedInUserId;
+                                dbDateWiseLeave.ModifiedDate = DateTime.UtcNow;
+                            }
+                            break;
+                        case LeaveStatus.Canceled:
+                            leaveToBeUpdated.LeaveStatus = LeaveStatus.Canceled;
+                            var leaveAvailability = await _appDbContext.LeaveAvailabilities
+                                .FirstAsync(x => x.Year == leaveToBeUpdated.FromDate.Year
+                                && x.SystemUserId == leaveToBeUpdated.EmployeeId
+                                && x.LeaveTypeId == leaveToBeUpdated.LeaveTypeId);
+                            leaveAvailability.BalanceCount += leaveToBeUpdated.LeaveCount;
+                            leaveAvailability.BookedCount -= leaveToBeUpdated.LeaveCount;
+                            break;
                     }
-                    else if (leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
-                    {
-                        switch (model.LeaveStatus)
-                        {
-                            case LeaveStatus.Approved:
-                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Approved;
-                                break;
-                            case LeaveStatus.Denied:
-                                leaveToBeUpdated.LeaveStatus = LeaveStatus.Denied;
-                                leaveToBeUpdated.DeniedReason = model.DeniedReason;
-                                break;
-                        }
-                        leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
-                        leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
-                    }
-                    else throw new Exception("You don't have permission to make changes.");
-                    
-                    var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
+                    leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
+                    leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
                 }
-                throw new Exception("Leave not found!");
+                else if (leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
+                {
+                    switch (model.LeaveStatus)
+                    {
+                        case LeaveStatus.Approved:
+                            leaveToBeUpdated.LeaveStatus = LeaveStatus.Approved;
+                            break;
+                        case LeaveStatus.Denied:
+                            leaveToBeUpdated.LeaveStatus = LeaveStatus.Denied;
+                            leaveToBeUpdated.DeniedReason = model.DeniedReason;
+                            var leaveAvailability = await _appDbContext.LeaveAvailabilities
+                                .FirstAsync(x => x.Year == leaveToBeUpdated.FromDate.Year
+                                && x.SystemUserId == leaveToBeUpdated.EmployeeId
+                                && x.LeaveTypeId == leaveToBeUpdated.LeaveTypeId);
+                            leaveAvailability.BalanceCount += leaveToBeUpdated.LeaveCount;
+                            leaveAvailability.BookedCount -= leaveToBeUpdated.LeaveCount;
+                            break;
+                    }
+                    leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
+                    leaveToBeUpdated.ModifiedDate = DateTime.UtcNow;
+                }
+
+                var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (DbUpdateConcurrencyException ex)
             {
@@ -120,10 +139,12 @@ namespace LMS.Services
                 var databaseEntry = entry.GetDatabaseValues();
 
                 var databaseValues = (Leave)databaseEntry.ToObject();
+                await transaction.RollbackAsync();
                 throw new Exception($"Leave is {Enum.GetName(typeof(LeaveStatus), databaseValues.LeaveStatus)}.");
             }
             catch (Exception)
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -191,11 +212,9 @@ namespace LMS.Services
                     .Include(x => x.Reviewer)
                     .Include(x => x.DateWiseLeaves)
                     .FirstOrDefaultAsync(x => x.Id == id);
-                if (leave is not null)
-                {
-                    return _mapper.Map<Leave, LeaveViewModel>(leave);
-                }
-                throw new Exception("Leave not found!");
+                return leave is null
+                    ? throw new Exception("Leave not found!")
+                    : _mapper.Map<Leave, LeaveViewModel>(leave);
             }
             catch (Exception)
             {
@@ -238,17 +257,14 @@ namespace LMS.Services
             try
             {
                 var leave = await _appDbContext.Leaves
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                if (leave is not null)
-                {
-                    leave.Status = DataRecordStatus.Deleted;
-                    leave.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    leave.DeletedDate = DateTime.UtcNow;
-                    _appDbContext.Leaves.Update(leave);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<Leave, LeaveViewModel>(leave);
-                }
-                throw new Exception("Leave not found!");
+                    .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Leave not found!");
+
+                leave.Status = DataRecordStatus.Deleted;
+                leave.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                leave.DeletedDate = DateTime.UtcNow;
+                _appDbContext.Leaves.Update(leave);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<Leave, LeaveViewModel>(leave);
             }
             catch (Exception)
             {

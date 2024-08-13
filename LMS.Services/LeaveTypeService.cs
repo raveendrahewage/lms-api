@@ -48,19 +48,16 @@ namespace LMS.Services
             try
             {
                 var leaveTypeToBeUpdated = await _appDbContext.LeaveTypes
-                    .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(leaveTypeToBeUpdated is not null)
-                {
-                    leaveTypeToBeUpdated.Name = model.Name;
-                    leaveTypeToBeUpdated.DefaultLeaveCount = model.DefaultLeaveCount;
-                    leaveTypeToBeUpdated.Status = model.Status;
-                    leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    leaveTypeToBeUpdated.ModifiedDate = DateTime.UtcNow;
-                    var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<LeaveType, LeaveTypeViewModel>(result.Entity);
-                }
-                throw new Exception("Leave type not found!");
+                    .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new Exception("Leave type not found!");
+
+                leaveTypeToBeUpdated.Name = model.Name;
+                leaveTypeToBeUpdated.DefaultLeaveCount = model.DefaultLeaveCount;
+                leaveTypeToBeUpdated.Status = model.Status;
+                leaveTypeToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                leaveTypeToBeUpdated.ModifiedDate = DateTime.UtcNow;
+                var result = _appDbContext.LeaveTypes.Update(leaveTypeToBeUpdated);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<LeaveType, LeaveTypeViewModel>(result.Entity);
             }
             catch (Exception)
             {
@@ -130,12 +127,11 @@ namespace LMS.Services
             try
             {
                 var leaveType = await _appDbContext.LeaveTypes
+                    .Include(x => x.LeaveAvailabilities)
                     .FirstOrDefaultAsync(x => x.Id == id);
-                if(leaveType is not null)
-                {
-                    return _mapper.Map<LeaveType, LeaveTypeViewModel>(leaveType);
-                }
-                throw new Exception("Leave type not found!");
+                return leaveType is null
+                    ? throw new Exception("Leave type not found!")
+                    : _mapper.Map<LeaveType, LeaveTypeViewModel>(leaveType);
             }
             catch (Exception)
             {
@@ -147,17 +143,14 @@ namespace LMS.Services
             try
             {
                 var leaveType = await _appDbContext.LeaveTypes
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                if(leaveType is not null)
-                {
-                    leaveType.Status = DataRecordStatus.Deleted;
-                    leaveType.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    leaveType.DeletedDate = DateTime.UtcNow;
-                    _appDbContext.LeaveTypes.Update(leaveType);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<LeaveType, LeaveTypeViewModel>(leaveType);
-                }
-                throw new Exception("Leave type not found!");
+                    .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Leave type not found!");
+
+                leaveType.Status = DataRecordStatus.Deleted;
+                leaveType.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                leaveType.DeletedDate = DateTime.UtcNow;
+                _appDbContext.LeaveTypes.Update(leaveType);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<LeaveType, LeaveTypeViewModel>(leaveType);
             }
             catch (Exception)
             {

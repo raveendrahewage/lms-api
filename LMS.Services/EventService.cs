@@ -51,22 +51,19 @@ namespace LMS.Services
             try
             {
                 var eventToBeUpdated = await _appDbContext.Events
-                    .FirstOrDefaultAsync(x => x.Id == model.Id);
-                if(eventToBeUpdated is not null)
-                {
-                    eventToBeUpdated.Title = model.Title;
-                    eventToBeUpdated.Description = model.Description;
-                    eventToBeUpdated.StartDate = model.StartDate;
-                    eventToBeUpdated.EndDate = model.EndDate;
-                    eventToBeUpdated.EventStatus = model.EventStatus;
-                    eventToBeUpdated.EventMode = model.EventMode;
-                    eventToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
-                    eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
-                    var result = _appDbContext.Events.Update(eventToBeUpdated);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<Event, EventViewModel>(result.Entity);
-                }
-                throw new Exception("Event not found!");
+                    .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new Exception("Event not found!");
+
+                eventToBeUpdated.Title = model.Title;
+                eventToBeUpdated.Description = model.Description;
+                eventToBeUpdated.StartDate = model.StartDate;
+                eventToBeUpdated.EndDate = model.EndDate;
+                eventToBeUpdated.EventStatus = model.EventStatus;
+                eventToBeUpdated.EventMode = model.EventMode;
+                eventToBeUpdated.ModifiedBy = _accountService.GetCurrentLoggedInUserId();
+                eventToBeUpdated.ModifiedDate = DateTime.UtcNow;
+                var result = _appDbContext.Events.Update(eventToBeUpdated);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<Event, EventViewModel>(result.Entity);
             }
             catch (Exception)
             {
@@ -157,11 +154,9 @@ namespace LMS.Services
             {
                 var dbEvent = await _appDbContext.Events
                     .FirstOrDefaultAsync(x => x.Id == id);
-                if(dbEvent is not null)
-                {
-                    return _mapper.Map<Event, EventViewModel>(dbEvent);
-                }
-                throw new Exception("Event not found!");
+                return dbEvent is null
+                    ? throw new Exception("Event not found!")
+                    : _mapper.Map<Event, EventViewModel>(dbEvent);
             }
             catch (Exception)
             {
@@ -173,17 +168,14 @@ namespace LMS.Services
             try
             {
                 var dbEvent = await _appDbContext.Events
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                if(dbEvent is not null)
-                {
-                    dbEvent.Status = DataRecordStatus.Deleted;
-                    dbEvent.DeletedBy = _accountService.GetCurrentLoggedInUserId();
-                    dbEvent.DeletedDate = DateTime.UtcNow;
-                    _appDbContext.Events.Update(dbEvent);
-                    await _appDbContext.SaveChangesAsync();
-                    return _mapper.Map<Event, EventViewModel>(dbEvent);
-                }
-                throw new Exception("Event not found!");
+                    .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Event not found!");
+
+                dbEvent.Status = DataRecordStatus.Deleted;
+                dbEvent.DeletedBy = _accountService.GetCurrentLoggedInUserId();
+                dbEvent.DeletedDate = DateTime.UtcNow;
+                _appDbContext.Events.Update(dbEvent);
+                await _appDbContext.SaveChangesAsync();
+                return _mapper.Map<Event, EventViewModel>(dbEvent);
             }
             catch (Exception)
             {

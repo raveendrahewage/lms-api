@@ -32,5 +32,14 @@ namespace LMS.Data.Models
         public virtual LeaveType LeaveType { get; set; }
         public virtual SystemUser? Reviewer { get; set; }
         public virtual SystemUser Employee { get; set; }
+
+        [NotMapped]
+        public double LeaveCount
+        {
+            get
+            {
+                return DateWiseLeaves.Sum(d => d.LeaveCount);
+            }
+        }
     }
 }

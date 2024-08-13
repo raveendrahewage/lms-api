@@ -43,24 +43,20 @@ namespace LMS.Services
             try
             {
                 var signInResult = await SignInAsync(model, false);
-                if (signInResult)
-                {
-                    var sysUser = await _userManager.FindByEmailAsync(model.Email);
-                    if(sysUser is not null)
-                    {
-                        var systemUser = await _appDbContext.SystemUsers
-                            .Include(x => x.Role)
-                            .FirstAsync(x => x.Id == sysUser.Id);
-                        var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                        var token = GenerateToken(systemUser);
-                        return new AuthResult(
-                            new JwtSecurityTokenHandler().WriteToken(token),
-                            token.ValidTo,
-                            systemUserViewModel
-                        );
-                    }
-                }
-                throw new Exception("Signed in failed! Incorrect username or password.");
+                var sysUser = await _userManager.FindByEmailAsync(model.Email);
+                if (!signInResult || sysUser is null)
+                    throw new Exception("Signed in failed! Incorrect username or password.");
+
+                var systemUser = await _appDbContext.SystemUsers
+                           .Include(x => x.Role)
+                           .FirstAsync(x => x.Id == sysUser.Id);
+                var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
+                var token = GenerateToken(systemUser);
+                return new AuthResult(
+                    new JwtSecurityTokenHandler().WriteToken(token),
+                    token.ValidTo,
+                    systemUserViewModel
+                );
             } catch(Exception)
             {
                 throw;
@@ -72,24 +68,20 @@ namespace LMS.Services
             try
             {
                 var signUpResult = await SignUpAsync(model);
-                if (signUpResult)
-                {
-                    var sysUser = await _userManager.FindByEmailAsync(model.Email);
-                    if (sysUser is not null)
-                    {
-                        var systemUser = await _appDbContext.SystemUsers
+                var sysUser = await _userManager.FindByEmailAsync(model.Email);
+                if (!signUpResult || sysUser is null)
+                    throw new Exception("Signed up failed! Incorrect username or password.");
+
+                var systemUser = await _appDbContext.SystemUsers
                             .Include(x => x.Role)
                             .FirstAsync(x => x.Id == sysUser.Id);
-                        var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
-                        var token = GenerateToken(systemUser);
-                        return new AuthResult(
-                            new JwtSecurityTokenHandler().WriteToken(token),
-                            token.ValidTo,
-                            systemUserViewModel
-                        );
-                    }
-                }
-                throw new Exception("Signed up failed! Incorrect username or password.");
+                var systemUserViewModel = _mapper.Map<SystemUser, SystemUserViewModel>(systemUser);
+                var token = GenerateToken(systemUser);
+                return new AuthResult(
+                    new JwtSecurityTokenHandler().WriteToken(token),
+                    token.ValidTo,
+                    systemUserViewModel
+                );
             }
             catch(Exception)
             {
@@ -100,21 +92,17 @@ namespace LMS.Services
         {
             try
             {
-                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
-                if(loggedInSystemUser is not null)
-                {
-                    var passwordCheckResult = await _userManager.CheckPasswordAsync(loggedInSystemUser, model.OldPassword);
-                    if (passwordCheckResult)
-                    {
-                        model.Token = string.IsNullOrEmpty(model.Token) ? await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser): model.Token;
-                        var result = await _userManager.ResetPasswordAsync(loggedInSystemUser, model.Token, model.NewPassword);
-                        if (result is not null && result.Succeeded)
-                            return result.Succeeded;
-                        throw new Exception("Password reset failed! Something went wrong.");
-                    }
+                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername()) ?? throw new Exception("System user not found!");
+                var passwordCheckResult = await _userManager.CheckPasswordAsync(loggedInSystemUser, model.OldPassword);
+                if (!passwordCheckResult)
                     throw new Exception("Incorrect password!");
-                }
-                throw new Exception("System user not found!");
+
+                model.Token = string.IsNullOrEmpty(model.Token) ? await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser) : model.Token;
+                var result = await _userManager.ResetPasswordAsync(loggedInSystemUser, model.Token, model.NewPassword);
+                if (result is null || !result.Succeeded)
+                    throw new Exception("Password reset failed! Something went wrong.");
+                
+                return result.Succeeded;
             }
             catch (Exception)
             {
@@ -126,11 +114,9 @@ namespace LMS.Services
             try
             {
                 var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
-                if (loggedInSystemUser is not null)
-                {
-                    return await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser);
-                }
-                throw new Exception("System user not found!");
+                return loggedInSystemUser is null
+                    ? throw new Exception("System user not found!")
+                    : await _userManager.GeneratePasswordResetTokenAsync(loggedInSystemUser);
             }
             catch (Exception)
             {
@@ -141,18 +127,14 @@ namespace LMS.Services
         {
             try
             {
-                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername());
-                if (loggedInSystemUser is not null)
-                {
-                    var systemUser = await _appDbContext.SystemUsers
+                var loggedInSystemUser = await _userManager.FindByEmailAsync(GetCurrentLoggedInUsername()) ?? throw new Exception("System user not found!");
+                var systemUser = await _appDbContext.SystemUsers
                         .Include(x => x.Role)
                         .Include(x => x.Leaves)
                         .Include(x => x.ReviewedLeaves)
                         .Include(x => x.EmployeesUnderSupervision)
                         .FirstOrDefaultAsync(x => x.Id == loggedInSystemUser.Id);
-                    return _mapper.Map<SystemUser, SystemUserViewModel>(loggedInSystemUser);
-                }
-                throw new Exception("System user not found!");
+                return _mapper.Map<SystemUser, SystemUserViewModel>(loggedInSystemUser);
             }
             catch (Exception)
             {

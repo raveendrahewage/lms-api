@@ -31,5 +31,13 @@ namespace LMS.Services.ViewModels
         public virtual LeaveTypeViewModel? LeaveType { get; set; }
         public virtual SystemUserViewModel? Reviewer { get; set; }
         public virtual SystemUserViewModel? Employee { get; set; }
+
+        public double LeaveCount
+        {
+            get
+            {
+                return DateWiseLeaves.Sum(d => d.LeaveCount);
+            }
+        }
     }
 }
