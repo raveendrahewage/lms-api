@@ -52,7 +52,8 @@ namespace LMS.Services
                     && x.LeaveTypeId == leaveToBeCreated.LeaveTypeId);
                 leaveAvailability.BalanceCount -= leaveToBeCreated.LeaveCount;
                 leaveAvailability.BookedCount += leaveToBeCreated.LeaveCount;
-                _appDbContext.SaveChanges();
+                await _appDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (Exception)
@@ -130,6 +131,7 @@ namespace LMS.Services
 
                 var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
                 await _appDbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (DbUpdateConcurrencyException ex)

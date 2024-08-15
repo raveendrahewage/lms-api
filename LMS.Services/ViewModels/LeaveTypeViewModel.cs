@@ -14,5 +14,6 @@ namespace LMS.Services.ViewModels
         public string Name { get; set; } = string.Empty;
         public int DefaultLeaveCount { get; set; } = 0;
         public virtual List<LeaveViewModel> Leaves { get; } = [];
+        public virtual List<LeaveAvailabilityViewModel> LeaveAvailabilities { get; } = [];
     }
 }

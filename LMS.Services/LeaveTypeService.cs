@@ -83,6 +83,7 @@ namespace LMS.Services
             {
                 var leaveAvailabilities= await _appDbContext.LeaveAvailabilities
                     .Include(x => x.LeaveType)
+                        .ThenInclude(x => x.LeaveAvailabilities.Where(x => x.SystemUserId == id))
                     .Where(x => x.SystemUserId == id && x.Year == DateTime.UtcNow.Year)
                     .Select(x => x.LeaveType)
                     .ToListAsync();
