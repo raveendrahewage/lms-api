@@ -27,7 +27,7 @@ namespace LMS.Services.ViewModels
         public string? DeniedReason { get; set; }
         public int? ReviewedBy { get; set; }
 
-        public virtual List<DateWiseLeaveViewModel> DateWiseLeaves { get; } = [];
+        public virtual List<DateWiseLeaveViewModel> DateWiseLeaves { get; set; } = [];
         public virtual LeaveTypeViewModel? LeaveType { get; set; }
         public virtual SystemUserViewModel? Reviewer { get; set; }
         public virtual SystemUserViewModel? Employee { get; set; }

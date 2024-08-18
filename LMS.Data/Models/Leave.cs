@@ -28,13 +28,13 @@ namespace LMS.Data.Models
         [Timestamp]
         public byte[] Version { get; set; }
 
-        public virtual List<DateWiseLeave> DateWiseLeaves { get; } = [];
+        public virtual List<DateWiseLeave> DateWiseLeaves { get; set; } = [];
         public virtual LeaveType LeaveType { get; set; }
         public virtual SystemUser? Reviewer { get; set; }
         public virtual SystemUser Employee { get; set; }
 
         [NotMapped]
-        public double LeaveCount
+        public decimal LeaveCount
         {
             get
             {

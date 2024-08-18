@@ -40,15 +40,15 @@ namespace LMS.Data.Models
         }
 
         [NotMapped]
-        public double LeaveCount
+        public decimal LeaveCount
         {
             get
             {
                 return LeaveDayType switch
                 {
                     LeaveDayType.FullDay => 1,
-                    LeaveDayType.HalfDay => 0.5,
-                    LeaveDayType.QuarterDay => 0.25,
+                    LeaveDayType.HalfDay => 0.5m,
+                    LeaveDayType.QuarterDay => 0.25m,
                     _ => 0,
                 };
             }

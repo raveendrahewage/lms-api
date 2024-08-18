@@ -14,9 +14,9 @@ namespace LMS.Services.ViewModels
         public int Year { get; set; }
         public int SystemUserId { get; set; }
         public int LeaveTypeId { get; set; }
-        public int LeaveCount { get; set; }
-        public int BookedCount { get; set; }
-        public int BalanceCount { get; set; }
+        public decimal LeaveCount { get; set; }
+        public decimal BookedCount { get; set; }
+        public decimal BalanceCount { get; set; }
 
         public virtual LeaveTypeViewModel? LeaveType { get; set; }
         public virtual SystemUserViewModel? SystemUser { get; set; }

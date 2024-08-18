@@ -16,11 +16,11 @@ namespace LMS.Data.Models
         [ForeignKey(nameof(LeaveType))]
         public int LeaveTypeId { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
-        public double LeaveCount { get; set; }
+        public decimal LeaveCount { get; set; }
         [Column(TypeName = "decimal(18, 2)")]
-        public double BookedCount { get; set; } = 0;
+        public decimal BookedCount { get; set; } = 0;
         [Column(TypeName = "decimal(18, 2)")]
-        public double BalanceCount { get; set; } = 0;
+        public decimal BalanceCount { get; set; } = 0;
 
         public virtual LeaveType LeaveType { get; set; }
         public virtual SystemUser SystemUser { get; set; }

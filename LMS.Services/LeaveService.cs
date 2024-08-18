@@ -37,21 +37,20 @@ namespace LMS.Services
             {
                 var isConflictingLeavesAvailable = _appDbContext.Leaves.Any(x =>
                     x.EmployeeId == _accountService.GetCurrentLoggedInUserId()
-                    && x.FromDate >= model.FromDate
-                    && x.ToDate <= model.ToDate);
+                    && (
+                        (x.FromDate <= model.FromDate && x.ToDate >= model.FromDate)
+                        || (x.FromDate <= model.ToDate && x.ToDate >= model.ToDate)
+                       )
+                    && (x.LeaveStatus == LeaveStatus.Approved || x.LeaveStatus == LeaveStatus.Pending)
+                    );
                 if(isConflictingLeavesAvailable)
-                    throw new Exception("Selected dates are conflicting");
+                    throw new Exception("Selected dates are conflicting with another leave.");
 
                 var leaveToBeCreated = _mapper.Map<LeaveViewModel, Leave>(model);
                 leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
                 leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
                 var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
-                var leaveAvailability = await _appDbContext.LeaveAvailabilities
-                    .FirstAsync(x => x.Year == leaveToBeCreated.FromDate.Year
-                    && x.SystemUserId == leaveToBeCreated.EmployeeId
-                    && x.LeaveTypeId == leaveToBeCreated.LeaveTypeId);
-                leaveAvailability.BalanceCount -= leaveToBeCreated.LeaveCount;
-                leaveAvailability.BookedCount += leaveToBeCreated.LeaveCount;
+                await UpdateLeaveAvailabilities(leaveToBeCreated);
                 await _appDbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
@@ -83,6 +82,8 @@ namespace LMS.Services
                         case LeaveStatus.Pending:
                             leaveToBeUpdated.LeaveTypeId = model.LeaveTypeId;
                             leaveToBeUpdated.Reason = model.Reason;
+                            leaveToBeUpdated.FromDate = model.FromDate;
+                            leaveToBeUpdated.ToDate = model.ToDate;
                             leaveToBeUpdated.LeaveStatus = LeaveStatus.Pending;
                             foreach (var dbDateWiseLeave in leaveToBeUpdated.DateWiseLeaves)
                             {
@@ -93,15 +94,11 @@ namespace LMS.Services
                                 dbDateWiseLeave.ModifiedBy = currentLoggedInUserId;
                                 dbDateWiseLeave.ModifiedDate = DateTime.UtcNow;
                             }
+                            await UpdateLeaveAvailabilities(leaveToBeUpdated);
                             break;
                         case LeaveStatus.Canceled:
                             leaveToBeUpdated.LeaveStatus = LeaveStatus.Canceled;
-                            var leaveAvailability = await _appDbContext.LeaveAvailabilities
-                                .FirstAsync(x => x.Year == leaveToBeUpdated.FromDate.Year
-                                && x.SystemUserId == leaveToBeUpdated.EmployeeId
-                                && x.LeaveTypeId == leaveToBeUpdated.LeaveTypeId);
-                            leaveAvailability.BalanceCount += leaveToBeUpdated.LeaveCount;
-                            leaveAvailability.BookedCount -= leaveToBeUpdated.LeaveCount;
+                            await UpdateLeaveAvailabilities(leaveToBeUpdated, -1);
                             break;
                     }
                     leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
@@ -117,12 +114,7 @@ namespace LMS.Services
                         case LeaveStatus.Denied:
                             leaveToBeUpdated.LeaveStatus = LeaveStatus.Denied;
                             leaveToBeUpdated.DeniedReason = model.DeniedReason;
-                            var leaveAvailability = await _appDbContext.LeaveAvailabilities
-                                .FirstAsync(x => x.Year == leaveToBeUpdated.FromDate.Year
-                                && x.SystemUserId == leaveToBeUpdated.EmployeeId
-                                && x.LeaveTypeId == leaveToBeUpdated.LeaveTypeId);
-                            leaveAvailability.BalanceCount += leaveToBeUpdated.LeaveCount;
-                            leaveAvailability.BookedCount -= leaveToBeUpdated.LeaveCount;
+                            await UpdateLeaveAvailabilities(leaveToBeUpdated, -1);
                             break;
                     }
                     leaveToBeUpdated.ModifiedBy = currentLoggedInUserId;
@@ -296,6 +288,17 @@ namespace LMS.Services
                         };
 
             return await query.ToListAsync();
+        }
+
+        private async Task UpdateLeaveAvailabilities(Leave leave, int multiplier = 1)
+        {
+            var leaveAvailability = await _appDbContext.LeaveAvailabilities
+                .FirstAsync(x => x.Year == leave.FromDate.Year
+                    && x.SystemUserId == leave.EmployeeId
+                    && x.LeaveTypeId == leave.LeaveTypeId);
+            leaveAvailability.BalanceCount -= (multiplier * leave.LeaveCount);
+            leaveAvailability.BookedCount += (multiplier * leave.LeaveCount);
+            _appDbContext.LeaveAvailabilities.Update(leaveAvailability);
         }
     }
 }
