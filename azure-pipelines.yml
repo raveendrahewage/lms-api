@@ -1,0 +1,66 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest' # Linux agents build .NET 8 faster and cheaper (change to 'windows-latest' if required)
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+# 1. Ensure .NET 8 SDK is installed on the agent
+- task: UseDotNet@2
+  displayName: 'Use .NET 8 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+
+# 2. Restore NuGet Packages
+- task: DotNetCoreCLI@2
+  displayName: 'Restore Dependencies'
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+# 3. Build the Solution
+- task: DotNetCoreCLI@2
+  displayName: 'Build Project'
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+# 4. Run Unit Tests
+# - task: DotNetCoreCLI@2
+#   displayName: 'Run Tests'
+#   inputs:
+#     command: 'test'
+#     projects: '**/*Tests/*.csproj' # Adjust search pattern to match your test project names
+#     arguments: '--configuration $(buildConfiguration) --no-build'
+
+# 5. Publish API to Staging Directory (Zipped)
+- task: DotNetCoreCLI@2
+  displayName: 'Publish API'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+# 6. Save Artifact (Best practice for CI/CD separation)
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+# 7. Deploy to Azure Web App
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: 'Azure subscription 1(1)(26a2e343-0fd6-4f21-b3d7-d4dca09b50c2)'
+    appType: 'webApp' # Use 'webAppLinux' if your App Service OS is Linux
+    appName: 'lms-api'
+    package: '$(Build.ArtifactStagingDirectory)/*.zip'
+    deploymentMethod: 'auto'
