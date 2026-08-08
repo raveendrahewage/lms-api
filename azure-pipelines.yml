@@ -8,12 +8,12 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-# 1. Ensure .NET 8 SDK is installed on the agent
+# 1. Ensure .NET 10 SDK is installed on the agent
 - task: UseDotNet@2
-  displayName: 'Use .NET 8 SDK'
+  displayName: 'Use .NET 10 SDK'
   inputs:
     packageType: 'sdk'
-    version: '8.x'
+    version: '10.x'
 
 # 2. Restore NuGet Packages
 - task: DotNetCoreCLI@2
