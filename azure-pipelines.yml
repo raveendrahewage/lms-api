@@ -9,7 +9,6 @@ variables:
 
   # Azure resources
   azureServiceConnection: "Azure subscription 1(1)(26a2e343-0fd6-4f21-b3d7-d4dca09b50c2)"
-  keyVaultName: "lms-app-dev-kv"
   appServiceName: "lms-api"
 
   # Projects
@@ -76,7 +75,7 @@ steps:
       command: "publish"
       publishWebProjects: false
       projects: "$(apiProject)"
-      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/app"
+      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
       zipAfterPublish: true
 
   # ============================================================
