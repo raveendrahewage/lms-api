@@ -94,5 +94,5 @@ steps:
       azureSubscription: "$(azureServiceConnection)"
       appType: "webApp"
       appName: "$(appServiceName)"
-      package: "$(Build.ArtifactStagingDirectory)/app/*.zip"
+      package: "$(Build.ArtifactStagingDirectory)/*.zip"
       deploymentMethod: "auto"
