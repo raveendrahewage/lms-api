@@ -11,10 +11,6 @@ variables:
   azureServiceConnection: "Azure subscription 1(1)(26a2e343-0fd6-4f21-b3d7-d4dca09b50c2)"
   appServiceName: "lms-api"
 
-  # Projects
-  apiProject: "LMS.API/LMS.API.csproj"
-  dataProject: "LMS.Data/LMS.Data.csproj"
-
 steps:
   # ============================================================
   # 1. Install .NET 10 SDK
@@ -73,8 +69,7 @@ steps:
     displayName: "Publish API"
     inputs:
       command: "publish"
-      publishWebProjects: false
-      projects: "$(apiProject)"
+      publishWebProjects: true
       arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
       zipAfterPublish: true
 
