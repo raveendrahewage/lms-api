@@ -1,4 +1,3 @@
-using AutoMapper;
 using LMS.Api.Helpers;
 using LMS.Api.Helpers.Interfaces;
 using LMS.Api.Middleware;
@@ -8,6 +7,7 @@ using LMS.Services;
 using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
+using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +18,8 @@ using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.ConfigureKeyVault();
+
 var JWTSetting = builder.Configuration.GetSection("JWTSetting");
 
 // Add services to the container.
@@ -74,7 +76,13 @@ builder.Services.AddControllersWithViews()
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+var config = TypeAdapterConfig.GlobalSettings;
+
+// Scan the assembly where MapsterConfig lives
+config.Scan(typeof(MapsterRegistry).Assembly);
+config.Default.PreserveReference(true);
+config.Compile();
+
 builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();

@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Azure;
+﻿using Azure;
 using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Extensions;
@@ -10,13 +9,8 @@ using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Responses;
 using LMS.Services.ViewModels;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LMS.Services
 {

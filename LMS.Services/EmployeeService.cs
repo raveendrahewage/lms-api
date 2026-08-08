@@ -1,23 +1,14 @@
-﻿using AutoMapper;
-using LMS.Data;
+﻿using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
 using LMS.Services.Common;
 using LMS.Services.Constants;
 using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
-using LMS.Services.Responses;
 using LMS.Services.ViewModels;
+using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LMS.Services
 {

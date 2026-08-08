@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Azure;
+﻿using Azure;
 using LMS.Api.ViewModels;
 using LMS.Data;
 using LMS.Data.Enum;
@@ -12,13 +11,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using MapsterMapper;
 
 namespace LMS.Services
 {

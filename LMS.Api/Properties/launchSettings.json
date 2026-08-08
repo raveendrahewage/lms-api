@@ -36,6 +36,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "LMS.Api": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "KEYVAULT_ENDPOINT": "",
+      },
+      "applicationUrl": "http://localhost:5000"
     }
   }
 }
