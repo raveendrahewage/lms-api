@@ -32,7 +32,8 @@ namespace LMS.Api.Controllers
                 }
                 return BadRequest(model);
             }
-            catch (Exception) {
+            catch (Exception)
+            {
                 throw;
             }
         }

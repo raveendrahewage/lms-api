@@ -8,6 +8,7 @@ using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
 using Mapster;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,10 +23,27 @@ builder.Configuration.ConfigureKeyVault();
 
 var JWTSetting = builder.Configuration.GetSection("JWTSetting");
 
+var config = TypeAdapterConfig.GlobalSettings;
+
+// Scan the assembly where MapsterConfig lives
+config.Scan(typeof(MapsterRegistry).Assembly);
+config.Default.PreserveReference(true);
+config.Compile();
+
+builder.Services.AddSingleton(config);
+builder.Services.AddScoped<IMapper, ServiceMapper>();
+
 // Add services to the container.
 builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
     {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"));
+        options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"), sqlServerOptionsAction: sqlOptions =>
+        {
+            // Enables automatic retries for cloud transient errors like 40613
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        });
     }
 );
 
@@ -75,13 +93,6 @@ builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
-
-var config = TypeAdapterConfig.GlobalSettings;
-
-// Scan the assembly where MapsterConfig lives
-config.Scan(typeof(MapsterRegistry).Assembly);
-config.Default.PreserveReference(true);
-config.Compile();
 
 builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 

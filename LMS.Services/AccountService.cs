@@ -142,7 +142,7 @@ namespace LMS.Services
             try
             {
                 var signInResult = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure);
-                if (signInResult != null && signInResult.Succeeded) return true;
+                if (signInResult is not null && signInResult.Succeeded) return true;
                 return false;
             }
             catch(Exception ex)
@@ -178,7 +178,7 @@ namespace LMS.Services
                     new Claim(AuthClaim.SysUserRole, systemUser.Role.Name ?? string.Empty),
                     new Claim(AuthClaim.SysUserRoleId, systemUser.Role.Id.ToString()),
                     new(JwtRegisteredClaimNames.Aud, _configuration.GetSection("JWTSetting").GetSection("ValidAudience").Value!),
-                    new (JwtRegisteredClaimNames.Iss,_configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
+                    new (JwtRegisteredClaimNames.Iss, _configuration.GetSection("JWTSetting").GetSection("ValidIssuer").Value!)
                 ];
 
                 var tokenDescriptor = new SecurityTokenDescriptor
