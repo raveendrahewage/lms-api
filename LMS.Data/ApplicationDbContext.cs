@@ -21,6 +21,7 @@ namespace LMS.Data
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<LeaveAvailability> LeaveAvailabilities { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -31,6 +32,7 @@ namespace LMS.Data
             modelBuilder.ApplyConfiguration<DateWiseLeave>(new DateWiseLeavesConfiguration());
             modelBuilder.ApplyConfiguration<LeaveType>(new LeaveTypesConfiguration());
             modelBuilder.ApplyConfiguration<Event>(new EventsConfiguration());
+            modelBuilder.ApplyConfiguration<Notification>(new NotificationConfiguration());
         }
     }
 }

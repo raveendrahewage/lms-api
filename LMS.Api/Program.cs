@@ -1,18 +1,18 @@
 using LMS.Api.Helpers;
 using LMS.Api.Helpers.Interfaces;
 using LMS.Api.Middleware;
+using LMS.Api.SignalR;
 using LMS.Data;
 using LMS.Data.Models;
 using LMS.Services;
-using LMS.Services.Helpers;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
@@ -33,17 +33,17 @@ config.Compile();
 builder.Services.AddSingleton(config);
 builder.Services.AddScoped<IMapper, ServiceMapper>();
 
+// signalR
+builder.Services
+    .AddSignalR()
+    .AddAzureSignalR(builder.Configuration["SignalR:ConnectionString"]);
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+
 // Add services to the container.
 builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
     {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"), sqlServerOptionsAction: sqlOptions =>
-        {
-            // Enables automatic retries for cloud transient errors like 40613
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
-        });
+        options.UseSqlServer(builder.Configuration.GetConnectionString("LMSDbConnection"));
     }
 );
 
@@ -73,10 +73,11 @@ builder.Services.AddAuthentication(opt => {
     opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     }
-).AddJwtBearer(opt => {
-    opt.SaveToken = true;
-    opt.RequireHttpsMetadata = false;
-    opt.TokenValidationParameters = new TokenValidationParameters
+).AddJwtBearer(opt =>
+    {
+        opt.SaveToken = true;
+        opt.RequireHttpsMetadata = false;
+        opt.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -86,8 +87,32 @@ builder.Services.AddAuthentication(opt => {
             ValidIssuer = JWTSetting["ValidIssuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JWTSetting.GetSection("SecurityKey").Value!))
         };
-    }
-);
+        opt.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/leave-notifications"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+    };
+});
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://lms-api-fucgawb8d3bke8bz.westus2-01.azurewebsites.net")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews()
     .AddNewtonsoftJson(options =>
@@ -96,11 +121,16 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
 
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+
+builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
 builder.Services.AddScoped<ILeaveService, LeaveService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 builder.Services.AddControllers();
@@ -142,12 +172,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors(option =>
-{
-    option.AllowAnyOrigin();
-    option.AllowAnyMethod();
-    option.AllowAnyHeader();
-});
+app.UseCors("SignalRCorsPolicy");
 
 app.UseMiddleware<ApiExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
@@ -158,5 +183,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/", () => "API is running...");
+
+app.MapHub<LeaveNotificationHub>("/hubs/leave-notifications");
 
 app.Run();

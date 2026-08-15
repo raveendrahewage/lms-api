@@ -17,11 +17,13 @@ namespace LMS.Services
     public class LeaveService(
         ApplicationDbContext appDbContext,
         IAccountService accountService,
+        INotificationService _notificationService,
         IMapper mapper
         ) : ILeaveService
     {
         private readonly ApplicationDbContext _appDbContext = appDbContext;
         private readonly IAccountService _accountService = accountService;
+        private readonly INotificationService _notificationService = _notificationService;
         private readonly IMapper _mapper = mapper;
 
         public async Task<LeaveViewModel> CreateLeave(LeaveViewModel model)
@@ -29,8 +31,13 @@ namespace LMS.Services
             using var transaction = await _appDbContext.Database.BeginTransactionAsync();
             try
             {
+                var currentLoggedInUserId = _accountService.GetCurrentLoggedInUserId();
+                var currentLoggedInUser = await _appDbContext.SystemUsers
+                    .Include(x => x.Supervisor)
+                    .FirstOrDefaultAsync(x => x.Id == currentLoggedInUserId) ?? throw new Exception("Logged in user not found!");
+
                 var isConflictingLeavesAvailable = _appDbContext.Leaves.Any(x =>
-                    x.EmployeeId == _accountService.GetCurrentLoggedInUserId()
+                    x.EmployeeId == currentLoggedInUserId
                     && (
                         (x.FromDate <= model.FromDate && x.ToDate >= model.FromDate)
                         || (x.FromDate <= model.ToDate && x.ToDate >= model.ToDate)
@@ -41,12 +48,13 @@ namespace LMS.Services
                     throw new Exception("Selected dates are conflicting with another leave.");
 
                 var leaveToBeCreated = _mapper.Map<LeaveViewModel, Leave>(model);
-                leaveToBeCreated.CreatedBy = _accountService.GetCurrentLoggedInUserId();
-                leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = _accountService.GetCurrentLoggedInUserId());
+                leaveToBeCreated.CreatedBy = currentLoggedInUserId;
+                leaveToBeCreated.DateWiseLeaves.ForEach(l => l.CreatedBy = currentLoggedInUserId);
                 var result = await _appDbContext.Leaves.AddAsync(leaveToBeCreated);
                 await UpdateLeaveAvailabilities(leaveToBeCreated);
                 await _appDbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
+                await SendNotificationAsync(currentLoggedInUserId, currentLoggedInUser.SupervisorId, result.Entity.LeaveStatus, currentLoggedInUser.FirstName, currentLoggedInUser?.Supervisor?.FirstName, result.Entity.LeaveTypeId, result.Entity.Id);
                 return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (Exception)
@@ -62,11 +70,15 @@ namespace LMS.Services
             {
                 var leaveToBeUpdated = await _appDbContext.Leaves
                     .Include(x => x.Employee)
+                        .ThenInclude(x => x.Supervisor)
                     .Include(x => x.DateWiseLeaves)
                     .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new Exception("Leave not found!");
 
                 var currentLoggedInUserId = _accountService.GetCurrentLoggedInUserId();
-                if(leaveToBeUpdated.EmployeeId != currentLoggedInUserId || leaveToBeUpdated.Employee.SupervisorId == currentLoggedInUserId)
+                var currentLoggedInUser = await _appDbContext.SystemUsers
+                    .Include(x => x.Supervisor)
+                    .FirstOrDefaultAsync(x => x.Id == currentLoggedInUserId) ?? throw new Exception("Logged in user not found!");
+                if (leaveToBeUpdated.EmployeeId != currentLoggedInUserId && leaveToBeUpdated.Employee.SupervisorId != currentLoggedInUserId)
                     throw new Exception("You don't have permission to make changes.");
 
                 if (leaveToBeUpdated.EmployeeId == currentLoggedInUserId)
@@ -118,6 +130,7 @@ namespace LMS.Services
                 var result = _appDbContext.Leaves.Update(leaveToBeUpdated);
                 await _appDbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
+                await SendNotificationAsync(leaveToBeUpdated.EmployeeId, leaveToBeUpdated.Employee.SupervisorId, result.Entity.LeaveStatus, leaveToBeUpdated.Employee.FirstName, leaveToBeUpdated.Employee?.Supervisor?.FirstName, result.Entity.LeaveTypeId, leaveToBeUpdated.Id);
                 return _mapper.Map<Leave, LeaveViewModel>(result.Entity);
             }
             catch (DbUpdateConcurrencyException ex)
@@ -293,6 +306,52 @@ namespace LMS.Services
             leaveAvailability.BalanceCount -= (multiplier * leave.LeaveCount);
             leaveAvailability.BookedCount += (multiplier * leave.LeaveCount);
             _appDbContext.LeaveAvailabilities.Update(leaveAvailability);
+        }
+
+        private async Task SendNotificationAsync(int employeeId, int? supervisorId, LeaveStatus leaveStatus, string employeeName, string? supervisorName, int leaveType, int leaveId)
+        {
+            NotificationViewModel? notification = null;
+            string targetUrl = $"/dashboard/leaves/details/{leaveType}/{leaveId}";
+            if (supervisorId is not null)
+            {
+                if(leaveStatus == LeaveStatus.Pending)
+                {
+                    notification = new()
+                    {
+                        UserId = supervisorId.Value,
+                        Title = "New Leave Application",
+                        Message = $"{employeeName} submitted a new leave request.",
+                        Type = NotificationType.LeaveCreated,
+                        TargetUrl = targetUrl
+                    };
+                }
+
+                if (leaveStatus == LeaveStatus.Canceled)
+                {
+                    notification = new()
+                    {
+                        UserId = supervisorId.Value,
+                        Title = "Leave Canceled",
+                        Message = $"{employeeName} canceled their leave request.",
+                        Type = NotificationType.LeaveCancelled,
+                        TargetUrl = targetUrl
+                    };
+                }
+            }
+            if (leaveStatus == LeaveStatus.Approved || leaveStatus == LeaveStatus.Denied)
+            {
+                notification = new ()
+                {
+                    UserId = employeeId,
+                    Title = $"Leave {Enum.GetName(typeof(LeaveStatus), leaveStatus)}",
+                    Message = $"{supervisorName} {Enum.GetName(typeof(LeaveStatus), leaveStatus)} your leave request.",
+                    Type = leaveStatus == LeaveStatus.Approved ? NotificationType.LeaveApproved : NotificationType.LeaveDenied,
+                    TargetUrl = targetUrl
+                };
+            }
+
+            if(notification is not null)
+                await _notificationService.SendNotificationAsync(notification);
         }
     }
 }

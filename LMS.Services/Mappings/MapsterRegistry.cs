@@ -15,9 +15,7 @@ namespace LMS.Services.Mappings
                 .Map(d => d.NormalizedUserName, s => s.Email)
                 .Map(d => d.Email, s => s.Email)
                 .Map(d => d.NormalizedEmail, s => s.Email);
-
             config.NewConfig<SystemUser, SystemUserViewModel>();
-
             config.NewConfig<SystemUser, SystemUserListItemViewModel>()
                 .Map(d => d.RoleName, s => s.Role.Name)
                 .Map(d => d.SupervisorName, s => s.Supervisor.FullName);

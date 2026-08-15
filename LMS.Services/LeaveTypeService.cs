@@ -73,13 +73,20 @@ namespace LMS.Services
         {
             try
             {
-                var leaveAvailabilities= await _appDbContext.LeaveAvailabilities
+                var leaveAvailabilities = await _appDbContext.LeaveAvailabilities
                     .Include(x => x.LeaveType)
-                        .ThenInclude(x => x.LeaveAvailabilities.Where(x => x.SystemUserId == id))
                     .Where(x => x.SystemUserId == id && x.Year == DateTime.UtcNow.Year)
-                    .Select(x => x.LeaveType)
                     .ToListAsync();
-                return _mapper.Map<List<LeaveType>, List<LeaveTypeViewModel>>(leaveAvailabilities);
+
+                var leaveTypes = leaveAvailabilities.DistinctBy(x => x.LeaveTypeId)
+                    .Select(x => x.LeaveType)
+                    .ToList();
+                foreach (var leaveType in leaveTypes)
+                {
+                    var leaveAvailability = leaveAvailabilities.Where(x => x.LeaveTypeId == leaveType.Id).ToList();
+                    leaveType.LeaveAvailabilities = leaveAvailability;
+                }
+                return _mapper.Map<List<LeaveType>, List<LeaveTypeViewModel>>(leaveTypes);
             }
             catch (Exception)
             {

@@ -50,6 +50,10 @@ namespace ACIS.Data.Configurations
                 .WithOne(r => r.Reviewer)
                 .HasForeignKey(u => u.ReviewedBy)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.HasMany(u => u.Notifications)
+                .WithOne(r => r.User)
+                .HasForeignKey(u => u.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
             builder.Property(e => e.Version)
                 .IsRequired()
                 .IsRowVersion()
