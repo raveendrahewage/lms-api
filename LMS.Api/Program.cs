@@ -106,7 +106,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://lms-api-fucgawb8d3bke8bz.westus2-01.azurewebsites.net")
+        policy.WithOrigins("http://localhost:4200", "https://thankful-moss-0159cd01e.7.azurestaticapps.net")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
