@@ -10,10 +10,6 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-builder.Services
-    .AddApplicationInsightsTelemetryWorkerService()
-    .ConfigureFunctionsApplicationInsights();
-
 var keyVaultUrl = Environment.GetEnvironmentVariable("KEYVAULT_ENDPOINT");
 
 if (!string.IsNullOrEmpty(keyVaultUrl))
