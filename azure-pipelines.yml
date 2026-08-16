@@ -67,11 +67,23 @@ steps:
   #     publishTestResults: true
 
   - task: DotNetCoreCLI@2
-    displayName: "Publish API"
+    displayName: "Publish Web API"
     inputs:
       command: "publish"
       publishWebProjects: true
       arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+      zipAfterPublish: true
+
+# ============================================================
+  # 6. Publish Azure Function App Project
+  # ============================================================
+  - task: DotNetCoreCLI@2
+    displayName: "Publish Azure Function"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LMS.Azure.csproj"
+      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/functions"
       zipAfterPublish: true
 
   # ============================================================
@@ -99,13 +111,14 @@ steps:
       deploymentMethod: "auto"
 
   # ============================================================
-  # 9. Deploy Function to Azure Function App (Flex Consumption)
+  # 9. Deploy Function to Azure Function App
   # ============================================================
   - task: AzureFunctionApp@2
     displayName: "Deploy Azure Function App"
     inputs:
       connectedServiceNameARM: "$(azureServiceConnection)"
-      appType: "functionApp"
+      appType: "functionAppLinux"
       isFlexConsumption: true
+      deploymentMethod: "auto"
       appName: "$(functionAppName)"
       package: "$(Build.ArtifactStagingDirectory)/functions/*.zip"
