@@ -117,7 +117,7 @@ steps:
     displayName: "Deploy Azure Function App"
     inputs:
       connectedServiceNameARM: "$(azureServiceConnection)"
-      appType: "functionApp"
+      appType: "functionAppLinux"
       isFlexConsumption: true
       deploymentMethod: "auto"
       appName: "$(functionAppName)"
