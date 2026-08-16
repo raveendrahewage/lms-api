@@ -27,8 +27,7 @@ public class PdfController(IAzureStorageService azureStorageService, IApiRespons
     [HttpPost("submit-job")]
     public async Task<IActionResult> SubmitJob([FromBody] SubmitJobRequest request)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedUserId) ? parsedUserId : 0;
 
         var jobId = Guid.NewGuid().ToString();
         var jobPayload = new PdfJobMessage(jobId, userId, request.BlobName, request.OriginalFileName);

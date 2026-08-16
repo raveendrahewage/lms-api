@@ -6,7 +6,7 @@ namespace LMS.Services.Models
 {
     public record PdfJobMessage(
         string JobId, 
-        string UserId, 
+        int UserId, 
         string BlobName, 
         string OriginalFileName
     );
