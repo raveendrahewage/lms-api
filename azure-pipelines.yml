@@ -16,7 +16,6 @@ steps:
   # ============================================================
   # 1. Install .NET 10 SDK
   # ============================================================
-
   - task: UseDotNet@2
     displayName: "Use .NET 10 SDK"
     inputs:
@@ -26,7 +25,6 @@ steps:
   # ============================================================
   # 2. Display .NET Information
   # ============================================================
-
   - script: |
       dotnet --info
     displayName: "Display .NET Information"
@@ -34,7 +32,6 @@ steps:
   # ============================================================
   # 3. Restore NuGet Packages
   # ============================================================
-
   - task: DotNetCoreCLI@2
     displayName: "Restore Dependencies"
     inputs:
@@ -44,7 +41,6 @@ steps:
   # ============================================================
   # 4. Build Solution
   # ============================================================
-
   - task: DotNetCoreCLI@2
     displayName: "Build Solution"
     inputs:
@@ -53,28 +49,18 @@ steps:
       arguments: "--configuration $(buildConfiguration) --no-restore"
 
   # ============================================================
-  # 5. Run Unit Tests
+  # 5. Publish Web API Project
   # ============================================================
-
-  # Uncomment if you have test projects
-
-  # - task: DotNetCoreCLI@2
-  #   displayName: 'Run Unit Tests'
-  #   inputs:
-  #     command: 'test'
-  #     projects: '**/*Tests/*.csproj'
-  #     arguments: '--configuration $(buildConfiguration) --no-build'
-  #     publishTestResults: true
-
   - task: DotNetCoreCLI@2
     displayName: "Publish Web API"
     inputs:
       command: "publish"
-      publishWebProjects: true
-      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+      publishWebProjects: false
+      projects: "**/LMS.Api.csproj" # Explicitly target API project to prevent overwriting function zip
+      arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api"
       zipAfterPublish: true
 
-# ============================================================
+  # ============================================================
   # 6. Publish Azure Function App Project
   # ============================================================
   - task: DotNetCoreCLI@2
@@ -87,9 +73,8 @@ steps:
       zipAfterPublish: true
 
   # ============================================================
-  # 12. Publish Build Artifacts
+  # 7. Publish Build Artifacts
   # ============================================================
-
   - task: PublishBuildArtifacts@1
     displayName: "Publish Artifacts"
     inputs:
@@ -98,27 +83,25 @@ steps:
       publishLocation: "Container"
 
   # ============================================================
-  # 13. Deploy API to Azure App Service
+  # 8. Deploy API to Azure App Service
   # ============================================================
-
   - task: AzureWebApp@1
     displayName: "Deploy to Azure App Service"
     inputs:
       azureSubscription: "$(azureServiceConnection)"
-      appType: "webApp"
+      appType: "webAppLinux"
       appName: "$(appServiceName)"
-      package: "$(Build.ArtifactStagingDirectory)/*.zip"
-      deploymentMethod: "auto"
+      package: "$(Build.ArtifactStagingDirectory)/api/*.zip"
+      deploymentMethod: "zipDeploy"
 
   # ============================================================
-  # 9. Deploy Function to Azure Function App
+  # 9. Deploy Function to Azure Function App (Flex Consumption)
   # ============================================================
   - task: AzureFunctionApp@2
     displayName: "Deploy Azure Function App"
     inputs:
       connectedServiceNameARM: "$(azureServiceConnection)"
       appType: "functionAppLinux"
-      isFlexConsumption: true
-      deploymentMethod: "auto"
       appName: "$(functionAppName)"
       package: "$(Build.ArtifactStagingDirectory)/functions/*.zip"
+      deploymentMethod: "zipDeploy"
