@@ -119,5 +119,6 @@ steps:
       connectedServiceNameARM: "$(azureServiceConnection)"
       appType: "functionApp"
       isFlexConsumption: true
+      deploymentMethod: "auto"
       appName: "$(functionAppName)"
       package: "$(Build.ArtifactStagingDirectory)/functions/*.zip"
