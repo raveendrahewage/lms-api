@@ -19,7 +19,8 @@ public class ProcessPdfFunction(
         ServiceBusMessageActions messageActions)
     {
         var messageBody = message.Body.ToString();
-        var job = JsonSerializer.Deserialize<PdfJobMessage>(messageBody)!;
+        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var job = JsonSerializer.Deserialize<PdfJobMessage>(messageBody, jsonOptions)!;
 
         logger.LogInformation("Processing PDF Job: {JobId} for User: {UserId}", job.JobId, job.UserId);
 
