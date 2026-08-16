@@ -26,7 +26,7 @@ public class AzureStorageService : IAzureStorageService
 
     public string GenerateUploadSasUrl(string fileName, out string blobName)
     {
-        var containerName = _config["Azure:BlobContainerName"] ?? "pdf-uploads";
+        var containerName = _config["Azure:BlobContainerName"];
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
 
         blobName = $"{Guid.NewGuid()}_{fileName}";
@@ -47,7 +47,7 @@ public class AzureStorageService : IAzureStorageService
 
     public async Task EnqueuePdfJobAsync(PdfJobMessage jobMessage)
     {
-        var queueName = _config["Azure:ServiceBusQueueName"] ?? "pdf-processing-queue";
+        var queueName = _config["Azure:ServiceBusQueueName"];
         var sender = _serviceBusClient.CreateSender(queueName);
 
         var message = new ServiceBusMessage(JsonSerializer.Serialize(jobMessage))
