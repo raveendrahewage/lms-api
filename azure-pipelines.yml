@@ -10,6 +10,7 @@ variables:
   # Azure resources
   azureServiceConnection: "Azure subscription 1(1)(26a2e343-0fd6-4f21-b3d7-d4dca09b50c2)"
   appServiceName: "lms-api"
+  functionAppName: "lms-app-dev-fa"
 
 steps:
   # ============================================================
@@ -96,3 +97,15 @@ steps:
       appName: "$(appServiceName)"
       package: "$(Build.ArtifactStagingDirectory)/*.zip"
       deploymentMethod: "auto"
+
+  # ============================================================
+  # 9. Deploy Function to Azure Function App (Flex Consumption)
+  # ============================================================
+  - task: AzureFunctionApp@2
+    displayName: "Deploy Azure Function App"
+    inputs:
+      connectedServiceNameARM: "$(azureServiceConnection)"
+      appType: "functionApp"
+      isFlexConsumption: true
+      appName: "$(functionAppName)"
+      package: "$(Build.ArtifactStagingDirectory)/functions/*.zip"
