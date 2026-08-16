@@ -52,8 +52,7 @@ public class AzureStorageService : IAzureStorageService
 
         var message = new ServiceBusMessage(JsonSerializer.Serialize(jobMessage))
         {
-            ContentType = "application/json",
-            MessageId = jobMessage.JobId
+            ContentType = "application/json"
         };
 
         await sender.SendMessageAsync(message);
