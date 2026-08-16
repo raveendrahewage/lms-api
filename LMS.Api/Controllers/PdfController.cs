@@ -1,5 +1,6 @@
 ﻿using LMS.Api.Helpers;
 using LMS.Api.Helpers.Interfaces;
+using LMS.Data.Enum;
 using LMS.Service.Services;
 using LMS.Services.Azure.Interfaces;
 using LMS.Services.Models;
@@ -27,7 +28,7 @@ public class PdfController(IAzureStorageService azureStorageService, IApiRespons
     [HttpPost("submit-job")]
     public async Task<IActionResult> SubmitJob([FromBody] SubmitJobRequest request)
     {
-        var userId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedUserId) ? parsedUserId : 0;
+        var userId = int.TryParse(User.FindFirstValue(AuthClaim.SysUserUserId), out int parsedUserId) ? parsedUserId : 0;
 
         var jobId = Guid.NewGuid().ToString();
         var jobPayload = new PdfJobMessage(jobId, userId, request.BlobName, request.OriginalFileName);
