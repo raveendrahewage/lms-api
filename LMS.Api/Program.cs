@@ -1,10 +1,15 @@
+using Azure.Messaging.ServiceBus;
+using Azure.Storage.Blobs;
 using LMS.Api.Helpers;
 using LMS.Api.Helpers.Interfaces;
 using LMS.Api.Middleware;
+using LMS.Api.OpenApi.Transformers;
 using LMS.Api.SignalR;
 using LMS.Data;
 using LMS.Data.Models;
+using LMS.Service.Services;
 using LMS.Services;
+using LMS.Services.Azure.Interfaces;
 using LMS.Services.Interfaces;
 using LMS.Services.Mappings;
 using Mapster;
@@ -14,12 +19,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.ConfigureKeyVault();
+builder.Configuration.ConfigureKeyVault(builder.Environment.IsDevelopment());
 
 var JWTSetting = builder.Configuration.GetSection("JWTSetting");
 
@@ -33,10 +37,15 @@ config.Compile();
 builder.Services.AddSingleton(config);
 builder.Services.AddScoped<IMapper, ServiceMapper>();
 
+builder.Services.AddSingleton(_ => new BlobServiceClient(builder.Configuration.GetConnectionString("BlobStorageConnection")));
+builder.Services.AddSingleton(_ => new ServiceBusClient(builder.Configuration.GetConnectionString("ServiceBusConnection")));
+
+builder.Services.AddScoped<IAzureStorageService, AzureStorageService>();
+
 // signalR
 builder.Services
     .AddSignalR()
-    .AddAzureSignalR(builder.Configuration["SignalR:ConnectionString"]);
+    .AddAzureSignalR(builder.Configuration.GetConnectionString("SignalRConnection"));
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
 
@@ -134,34 +143,12 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => {
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = @"JWT Authorization LMS : 'Bearer -------token-------",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement(){
-        {
-            new OpenApiSecurityScheme{
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
-                Scheme = "outh2",
-                Name="Bearer",
-                In = ParameterLocation.Header,
-            },
-            new List<string>()
-        }
-    });
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
+
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 var app = builder.Build();
