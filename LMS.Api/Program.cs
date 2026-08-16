@@ -103,7 +103,7 @@ builder.Services.AddAuthentication(opt => {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
 
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/leave-notifications"))
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
                 {
                     context.Token = accessToken;
                 }
@@ -129,10 +129,6 @@ builder.Services.AddControllersWithViews()
 );
 
 builder.Services.AddSingleton<IApiResponseHelper, ApiResponseHelper>();
-
-builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
-
-builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -171,6 +167,6 @@ app.MapControllers();
 
 app.MapGet("/", () => "API is running...");
 
-app.MapHub<LeaveNotificationHub>("/hubs/leave-notifications");
+app.MapHub<LeaveNotificationHub>("/hubs/notifications");
 
 app.Run();

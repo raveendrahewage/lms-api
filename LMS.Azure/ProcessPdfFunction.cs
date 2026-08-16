@@ -12,7 +12,7 @@ public class ProcessPdfFunction(
     ILogger<ProcessPdfFunction> logger)
 {
     [Function(nameof(ProcessPdfFunction))]
-    [SignalROutput(HubName = "notificationhub", ConnectionStringSetting = "ConnectionStrings--SignalRConnection")]
+    [SignalROutput(HubName = "notifications", ConnectionStringSetting = "ConnectionStrings--SignalRConnection")]
     public async Task<SignalRMessageAction> Run(
         [ServiceBusTrigger("lms-pdf-processing-queue", Connection = "ConnectionStrings--ServiceBusConnection")]
         ServiceBusReceivedMessage message,
