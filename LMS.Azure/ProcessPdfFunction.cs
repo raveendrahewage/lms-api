@@ -36,7 +36,7 @@ public class ProcessPdfFunction(
 
         return new SignalRMessageAction("PdfCompleted")
         {
-            UserId = job.UserId,
+            UserId = job.UserId.ToString(),
             Arguments = [
                 new
                 {
