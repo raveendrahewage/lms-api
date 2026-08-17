@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace LMS.Api.SignalR
 {
     [Authorize]
-    public class LeaveNotificationHub: Hub
+    public class NotificationHub: Hub
     {
     }
 }

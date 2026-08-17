@@ -46,6 +46,7 @@ builder.Services.AddScoped<IAzureStorageService, AzureStorageService>();
 builder.Services
     .AddSignalR()
     .AddAzureSignalR(builder.Configuration.GetConnectionString("SignalRConnection"));
+
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
 
@@ -167,6 +168,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGet("/", () => "API is running...");
-app.MapHub<LeaveNotificationHub>("/hubs/notifications").RequireCors("SignalRCorsPolicy");
+app.MapHub<NotificationHub>("/hubs/notifications").RequireCors("SignalRCorsPolicy");
 
 app.Run();
