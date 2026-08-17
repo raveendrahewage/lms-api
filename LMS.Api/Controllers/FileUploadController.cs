@@ -13,9 +13,9 @@ using System.Security.Claims;
 namespace LMS.Api.Controllers;
 
 [ApiController]
-[Route("api/pdf")]
+[Route("api/file-upload")]
 [Authorize]
-public class PdfController(IAzureStorageService azureStorageService, IApiResponseHelper apiResponseHelper, IFileService fileService) : ControllerBase
+public class FileUploadController(IAzureStorageService azureStorageService, IApiResponseHelper apiResponseHelper, IFileService fileService) : ControllerBase
 {
     private readonly IAzureStorageService _azureStorageService = azureStorageService;
     private readonly IApiResponseHelper _apiResponseHelper = apiResponseHelper;
@@ -26,6 +26,21 @@ public class PdfController(IAzureStorageService azureStorageService, IApiRespons
     {
         var uploadUrl = _azureStorageService.GenerateUploadSasUrl(fileName, out var blobName);
         return Ok(_apiResponseHelper.GenerateApiResponse(true, new UploadResponse(uploadUrl, blobName)));
+    }
+
+    [HttpGet("download-url/{fileId:int}")]
+    public async Task<IActionResult> GetDownloadUrl(int fileId)
+    {
+        var fileRecord = await _fileService.GetFileById(fileId);
+        if (fileRecord == null)
+        {
+            return NotFound(_apiResponseHelper.GenerateApiResponse(false, "File record not found."));
+        }
+
+        // Generate read-only SAS URL valid for 15-30 minutes
+        var downloadUrl = _azureStorageService.GenerateDownloadSasUrl(fileRecord.BlobName, fileRecord.Name);
+
+        return Ok(_apiResponseHelper.GenerateApiResponse(true, new DownloadResponse(downloadUrl, fileRecord.Name)));
     }
 
     [HttpPost("submit-job")]

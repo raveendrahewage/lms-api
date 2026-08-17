@@ -23,4 +23,9 @@ namespace LMS.Services.Models
         string UploadUrl,
         string BlobName
     );
+
+    public record DownloadResponse(
+        string DownloadUrl,
+        string FileName
+    );
 }

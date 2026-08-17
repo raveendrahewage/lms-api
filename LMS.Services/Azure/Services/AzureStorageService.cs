@@ -45,6 +45,26 @@ public class AzureStorageService : IAzureStorageService
         return blobClient.GenerateSasUri(sasBuilder).ToString();
     }
 
+    public string GenerateDownloadSasUrl(string blobName, string fileName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient("pdf-uploads");
+        var blobClient = containerClient.GetBlobClient(blobName);
+
+        var sasBuilder = new BlobSasBuilder
+        {
+            BlobContainerName = "pdf-uploads",
+            BlobName = blobName,
+            Resource = "b",
+            StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5),
+            ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(30),
+            ContentDisposition = $"attachment; filename=\"{fileName}\""
+        };
+
+        sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+        return blobClient.GenerateSasUri(sasBuilder).ToString();
+    }
+
     public async Task EnqueuePdfJobAsync(PdfJobMessage jobMessage)
     {
         var queueName = _config["Azure:ServiceBusQueueName"];
