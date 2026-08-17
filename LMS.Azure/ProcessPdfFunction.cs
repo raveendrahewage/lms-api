@@ -53,7 +53,7 @@ public class ProcessPdfFunction(
                 Message = $"Your file('{job.OriginalFileName}') has been processed successfully.",
                 Title = "File Processed Successfully",
                 Type = NotificationType.FileProcessed,
-                TargetUrl = "/dashboard/file-upload"
+                TargetUrl = "/dashboard/file-upload",
             };
             var result = await _dbContext.Notifications.AddAsync(notification);
             insertedNotification = result.Entity;
@@ -63,7 +63,7 @@ public class ProcessPdfFunction(
         return new SignalRMessageAction("PdfCompleted")
         {
             UserId = job.UserId.ToString(),
-            Arguments = [JsonSerializer.Serialize(insertedNotification)]
+            Arguments = [JsonSerializer.Serialize(insertedNotification, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = false })]
         };
     }
 }
