@@ -15,8 +15,7 @@ namespace LMS.Services.ViewModels
         public string Description { get; set; } = string.Empty;
         public string Url { get; set; }
         public FileStatus FileStatus { get; set; }
-        [ForeignKey(nameof(UploadedBy))]
         public int UploadedById { get; set; }
-        public virtual SystemUserViewModel UploadedBy { get; set; }
+        public virtual SystemUserViewModel? UploadedBy { get; set; }
     }
 }
