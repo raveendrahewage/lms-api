@@ -50,9 +50,9 @@ public class FileUploadController(IAzureStorageService azureStorageService, IApi
 
         var jobId = Guid.NewGuid().ToString();
 
-
         request.File.FileStatus = FileStatus.Queued;
         request.File.UploadedById = userId;
+        request.File.BlobName = request.BlobName;
         var result = await _fileService.CreateFile(request.File);
 
         var jobPayload = new PdfJobMessage(result.Id, jobId, userId, request.BlobName, request.OriginalFileName);

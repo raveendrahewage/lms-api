@@ -13,6 +13,7 @@ namespace LMS.Data.Models
         public long Size {  get; set; }
         public FileCategory Category {  get; set; }
         public string Description {  get; set; } = string.Empty;
+        public string BlobName { get; set; } = string.Empty;
         public string Url {  get; set; }
         public FileStatus FileStatus {  get; set; }
         [ForeignKey(nameof(UploadedBy))]
