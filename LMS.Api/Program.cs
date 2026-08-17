@@ -140,6 +140,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
@@ -149,24 +150,23 @@ builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseRouting();
+
 app.UseCors("SignalRCorsPolicy");
 
 app.UseMiddleware<ApiExceptionHandlerMiddleware>();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.MapGet("/", () => "API is running...");
-
-app.MapHub<LeaveNotificationHub>("/hubs/notifications");
+app.MapHub<LeaveNotificationHub>("/hubs/notifications").RequireCors("SignalRCorsPolicy");
 
 app.Run();

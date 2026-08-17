@@ -15,8 +15,7 @@ public class ProcessPdfFunction(
     [SignalROutput(HubName = "notifications", ConnectionStringSetting = "SignalRConnection")]
     public async Task<SignalRMessageAction> Run(
         [ServiceBusTrigger("lms-pdf-processing-queue", Connection = "ServiceBusConnection")]
-        ServiceBusReceivedMessage message,
-        ServiceBusMessageActions messageActions)
+        ServiceBusReceivedMessage message)
     {
         var messageBody = message.Body.ToString();
         var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -31,8 +30,6 @@ public class ProcessPdfFunction(
         await blobClient.DownloadToAsync(memoryStream);
 
         await Task.Delay(3000);
-
-        await messageActions.CompleteMessageAsync(message);
 
         return new SignalRMessageAction("PdfCompleted")
         {
