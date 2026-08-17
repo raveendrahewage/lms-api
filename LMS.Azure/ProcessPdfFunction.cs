@@ -4,6 +4,7 @@ using LMS.Azure.Models;
 using LMS.Data;
 using LMS.Data.Enum;
 using LMS.Data.Models;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -62,7 +63,7 @@ public class ProcessPdfFunction(
         return new SignalRMessageAction("PdfCompleted")
         {
             UserId = job.UserId.ToString(),
-            Arguments = [insertedNotification]
+            Arguments = [JsonSerializer.Serialize(insertedNotification)]
         };
     }
 }
