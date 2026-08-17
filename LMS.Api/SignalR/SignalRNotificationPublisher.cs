@@ -5,9 +5,9 @@ namespace LMS.Api.SignalR
 {
     public class SignalRNotificationPublisher : INotificationPublisher
     {
-        private readonly IHubContext<LeaveNotificationHub> _hubContext;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public SignalRNotificationPublisher(IHubContext<LeaveNotificationHub> hubContext)
+        public SignalRNotificationPublisher(IHubContext<NotificationHub> hubContext)
         {
             _hubContext = hubContext;
         }
