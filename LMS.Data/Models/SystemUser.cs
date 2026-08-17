@@ -43,6 +43,7 @@ namespace LMS.Data.Models
         public virtual List<Leave> ReviewedLeaves { get; set; } = [];
         public virtual List<LeaveAvailability> LeaveAvailabilities { get; set; } = [];
         public virtual List<Notification> Notifications { get; set; } = [];
+        public virtual List<File> Files { get; set; } = [];
 
         public string FullName => $"{FirstName} {LastName}";
     }

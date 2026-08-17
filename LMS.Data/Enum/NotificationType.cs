@@ -10,5 +10,6 @@ namespace LMS.Data.Enum
         LeaveApproved = 2,
         LeaveCancelled = 3,
         LeaveDenied = 4,
+        FileProcessed = 5,
     }
 }

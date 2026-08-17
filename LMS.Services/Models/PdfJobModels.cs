@@ -1,10 +1,12 @@
-﻿using System;
+﻿using LMS.Services.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace LMS.Services.Models
 {
     public record PdfJobMessage(
+        int FileId,
         string JobId, 
         int UserId, 
         string BlobName, 
@@ -13,7 +15,8 @@ namespace LMS.Services.Models
 
     public record SubmitJobRequest(
         string BlobName, 
-        string OriginalFileName
+        string OriginalFileName,
+        FileViewModel File
     );
 
     public record UploadResponse(
